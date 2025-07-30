@@ -1,14 +1,514 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Home</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Admin Panel</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <style>
-        body { font-family: Arial; text-align: center; padding: 50px; }
-        a { color: #4361ee; text-decoration: none; }
+        :root{--primary-color:#4361ee;--secondary-color:#3f37c9;--success-color:#4cc9f0;--danger-color:#f72585;--warning-color:#f8961e;--info-color:#4895ef;--dark-color:#212529;--light-color:#f8f9fa}
+        body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;margin:0;padding:0;background-color:#f5f7fa;color:#333}
+        .container{display:flex;min-height:100vh}
+        .auth-container{display:flex;justify-content:center;align-items:center;min-height:100vh;width:100%;background:linear-gradient(135deg,#4361ee,#3f37c9)}
+        .auth-box{background-color:white;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.2);width:400px;max-width:90%;padding:30px;text-align:center}
+        .auth-header h2{color:var(--primary-color);margin:0 0 10px;font-size:1.8rem}
+        .auth-header p{color:#6c757d;margin-top:10px}
+        .auth-tabs{display:flex;margin-bottom:20px;border-bottom:1px solid #eee}
+        .auth-tab{flex:1;padding:15px;cursor:pointer;font-weight:600;transition:all 0.3s}
+        .auth-tab.active{color:var(--primary-color);border-bottom:3px solid var(--primary-color)}
+        .auth-tab-content,.content-section{display:none}
+        .auth-tab-content.active,.content-section.active{display:block}
+        .form-group{margin-bottom:20px;text-align:left}
+        .form-group label{display:block;margin-bottom:8px;font-weight:500;color:#495057}
+        .form-control{box-sizing:border-box;width:100%;padding:12px 15px;border:1px solid #ced4da;border-radius:5px;font-size:1rem;transition:border-color 0.3s}
+        .form-control:focus{border-color:var(--primary-color);outline:none;box-shadow:0 0 0 3px rgba(67,97,238,0.15)}
+        .btn{padding:12px 15px;border:none;border-radius:5px;cursor:pointer;font-size:1rem;font-weight:600;width:100%;transition:all 0.3s}
+        .btn-primary{background-color:var(--primary-color);color:white}
+        .btn-primary:hover{background-color:var(--secondary-color)}
+        .error-message{color:var(--danger-color);font-size:0.9rem;margin-top:5px;display:none}
+        .sidebar{width:250px;background-color:#2b2d42;color:white;padding:20px 0;box-shadow:2px 0 10px rgba(0,0,0,0.1);display:flex;flex-direction:column}
+        .sidebar-header{padding:0 20px 20px;border-bottom:1px solid rgba(255,255,255,0.1)}
+        .sidebar-header h2{margin:0;font-size:1.5rem;display:flex;align-items:center}
+        .sidebar-header h2 i{margin-right:10px;color:var(--success-color)}
+        .sidebar-menu{padding:20px 0;flex-grow:1}
+        .menu-item{padding:12px 20px;cursor:pointer;transition:all 0.3s;display:flex;align-items:center}
+        .menu-item:hover{background-color:rgba(255,255,255,0.1)}
+        .menu-item.active{background-color:var(--primary-color)}
+        .menu-item i{margin-right:15px;width:20px;text-align:center}
+        .main-content{flex:1;padding:30px;background-color:#f5f7fa;overflow-x:auto}
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;padding-bottom:15px;border-bottom:1px solid #e0e0e0}
+        .header h1{margin:0;font-size:2rem;color:var(--dark-color)}
+        .user-info{display:flex;align-items:center}
+        .user-info img{width:40px;height:40px;border-radius:50%;margin-right:10px;object-fit:cover}
+        .user-info span{font-weight:600}
+        .logout-btn{background-color:var(--danger-color);color:white;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;margin-left:15px;font-weight:600}
+        .dashboard-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:25px;margin-bottom:30px}
+        .card{background-color:white;border-radius:10px;padding:20px;box-shadow:0 4px 15px rgba(0,0,0,0.07);transition:transform 0.2s}
+        .card:hover{transform:translateY(-5px)}
+        .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+        .card-title{font-size:1rem;color:#6c757d;margin:0;font-weight:600}
+        .card-icon{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:1.5rem}
+        .card-icon.users{background-color:var(--info-color)}
+        .card-icon.earnings{background-color:var(--success-color)}
+        .card-icon.withdrawals{background-color:var(--warning-color)}
+        .card-icon.active{background-color:var(--primary-color)}
+        .card-value{font-size:2.2rem;font-weight:bold;margin:10px 0}
+        .table-container{background-color:white;border-radius:10px;padding:20px;box-shadow:0 4px 15px rgba(0,0,0,0.07);margin-bottom:30px}
+        .table-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+        .table-title{margin:0;font-size:1.5rem}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:15px;text-align:left;border-bottom:1px solid #eee;vertical-align:middle}
+        th{background-color:#f8f9fa;font-weight:600;color:#333}
+        tr:hover{background-color:#f8f9fa}
+        .status{padding:5px 12px;border-radius:20px;font-size:0.8rem;font-weight:bold;text-transform:capitalize}
+        .status.approved,.status.active{background-color:rgba(76,201,240,0.2);color:var(--info-color)}
+        .status.banned,.status.rejected{background-color:rgba(247,37,133,0.15);color:var(--danger-color)}
+        .status.pending{background-color:rgba(248,150,30,0.2);color:var(--warning-color)}
+        .action-btn{padding:6px 12px;border:none;border-radius:5px;cursor:pointer;font-size:0.8rem;margin-right:5px;color:white;font-weight:600;transition:opacity 0.2s}
+        .action-btn:hover{opacity:0.85}
+        .edit-btn{background-color:var(--warning-color)}
+        .approve-btn{background-color:var(--success-color)}
+        .reject-btn{background-color:var(--danger-color)}
+        .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.5);z-index:1000;justify-content:center;align-items:center;animation:fadeIn 0.3s}
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        .modal-content{background-color:white;border-radius:10px;width:500px;max-width:90%;padding:25px;box-shadow:0 4px 20px rgba(0,0,0,0.15);animation:slideIn 0.3s}
+        @keyframes slideIn{from{transform:translateY(-30px);opacity:0}to{transform:translateY(0);opacity:1}}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #eee}
+        .modal-title{margin:0;font-size:1.5rem}
+        .close-btn{background:none;border:none;font-size:1.8rem;cursor:pointer;color:#6c757d;line-height:1}
+        .modal-footer{display:flex;justify-content:flex-end;margin-top:20px}
+        .btn-secondary{background-color:#6c757d;color:white;margin-left:10px}
     </style>
 </head>
 <body>
-    <h1>Welcome to Our App</h1>
-    <p>Admin? <a href="login.html">Login here</a></p>
+
+    <!-- Auth Container (Login/Signup) - Shown by default -->
+    <div id="auth-container" class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <h2><i class="fas fa-crown"></i> Admin Panel</h2>
+                <p>Sign in to manage your application</p>
+            </div>
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="login">Login</div>
+                <div class="auth-tab" data-tab="signup">Sign Up</div>
+            </div>
+            <!-- Login Form -->
+            <div id="login-tab" class="auth-tab-content active">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                    <div class="error-message" id="login-error"></div>
+                </form>
+            </div>
+            <!-- Signup Form -->
+            <div id="signup-tab" class="auth-tab-content">
+                <form id="signup-form">
+                    <div class="form-group">
+                        <label for="signup-email">Email</label>
+                        <input type="email" id="signup-email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" class="form-control" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-confirm-password">Confirm Password</label>
+                        <input type="password" id="signup-confirm-password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Admin Account</button>
+                    <div class="error-message" id="signup-error"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Container - Hidden by default -->
+    <div id="admin-panel-container" class="container" style="display: none;">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-crown"></i> Admin Panel</h2>
+            </div>
+            <div class="sidebar-menu">
+                <div class="menu-item active" data-section="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</div>
+                <div class="menu-item" data-section="users"><i class="fas fa-users"></i> Users</div>
+                <div class="menu-item" data-section="withdrawals"><i class="fas fa-hand-holding-usd"></i> Withdrawals</div>
+                <div class="menu-item" data-section="settings"><i class="fas fa-cog"></i> Settings</div>
+            </div>
+        </div>
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h1 id="content-title">Dashboard</h1>
+                <div class="user-info">
+                    <img src="https://i.pravatar.cc/40" alt="Admin" id="admin-avatar">
+                    <span id="admin-name">Admin</span>
+                    <button class="logout-btn" id="logout-btn">Logout</button>
+                </div>
+            </div>
+            
+            <!-- Dashboard Section -->
+            <div id="dashboard-section" class="content-section active">
+                <div class="dashboard-cards">
+                    <div class="card"><div class="card-header"><h3 class="card-title">Total Users</h3><div class="card-icon users"><i class="fas fa-users"></i></div></div><div class="card-value" id="total-users">0</div></div>
+                    <div class="card"><div class="card-header"><h3 class="card-title">Total Earnings</h3><div class="card-icon earnings"><i class="fas fa-coins"></i></div></div><div class="card-value" id="total-earnings">0.00</div></div>
+                    <div class="card"><div class="card-header"><h3 class="card-title">Total Withdrawn</h3><div class="card-icon withdrawals"><i class="fas fa-money-check-alt"></i></div></div><div class="card-value" id="total-withdrawn">0.00</div></div>
+                    <div class="card"><div class="card-header"><h3 class="card-title">Active Today</h3><div class="card-icon active"><i class="fas fa-user-clock"></i></div></div><div class="card-value" id="active-users">0</div></div>
+                </div>
+                 <div class="table-container">
+                    <h3 class="table-title">Recent Activity</h3>
+                    <p>This is a fully functional professional admin panel. Use the menu on the left to manage users, withdrawals, and settings.</p>
+                </div>
+            </div>
+            
+            <!-- Users Section -->
+            <div id="users-section" class="content-section">
+                <div class="table-container">
+                    <h3 class="table-title">All Users</h3>
+                    <table id="users-table">
+                        <thead><tr><th>Email</th><th>Balance (USDT)</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="users-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Withdrawals Section -->
+            <div id="withdrawals-section" class="content-section">
+                 <div class="table-container">
+                    <h3 class="table-title">Withdrawal Requests</h3>
+                    <table id="withdrawals-table">
+                        <thead><tr><th>User Email</th><th>Amount (USDT)</th><th>Method</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="withdrawals-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div id="settings-section" class="content-section">
+                 <div class="table-container">
+                    <h3 class="table-title">Application Settings</h3>
+                     <form id="settings-form">
+                        <div class="form-group"><label for="min-withdrawal">Minimum Withdrawal (USDT)</label><input type="number" step="1" class="form-control" id="min-withdrawal" required></div>
+                        <div class="form-group"><label for="task-reward">Reward per Task (USDT)</label><input type="number" step="0.0001" class="form-control" id="task-reward" required></div>
+                        <div class="form-group"><label for="referral-reward">Referral Reward (USDT)</label><input type="number" step="0.01" class="form-control" id="referral-reward" required></div>
+                         <div class="modal-footer"><button type="submit" class="btn btn-primary">Save Settings</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal" id="edit-user-modal">
+        <div class="modal-content">
+            <div class="modal-header"><h3 class="modal-title">Edit User</h3><button type="button" class="close-btn" data-modal-id="edit-user-modal">×</button></div>
+            <form id="edit-user-form">
+                <input type="hidden" id="edit-user-id">
+                <div class="form-group"><label for="edit-user-email">Email</label><input type="email" class="form-control" id="edit-user-email" readonly></div>
+                <div class="form-group"><label for="edit-user-balance">Balance (USDT)</label><input type="number" step="0.01" class="form-control" id="edit-user-balance" required></div>
+                <div class="form-group"><label for="edit-user-status">Status</label><select class="form-control" id="edit-user-status" required><option value="active">Active</option><option value="banned">Banned</option></select></div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary close-btn" data-modal-id="edit-user-modal">Cancel</button><button type="submit" class="btn btn-primary">Save Changes</button></div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgvOSJFY8WqRoVXRWjWiOEdAmjvTz_pgU",
+            authDomain: "task-app-a3b8a.firebaseapp.com",
+            projectId: "task-app-a3b8a",
+            storageBucket: "task-app-a3b8a.firebasestorage.app",
+            messagingSenderId: "154506156460",
+            appId: "1:154506156460:web:78124e37a074fe43218209"
+        };
+
+        // --- Firebase Initialization ---
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // --- DOM Element References ---
+        const authContainer = document.getElementById('auth-container');
+        const adminPanelContainer = document.getElementById('admin-panel-container');
+        const adminNameEl = document.getElementById('admin-name');
+        const logoutBtn = document.getElementById('logout-btn');
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        const usersTableBody = document.getElementById('users-table-body');
+        const withdrawalsTableBody = document.getElementById('withdrawals-table-body');
+        const editUserModal = document.getElementById('edit-user-modal');
+        const editUserForm = document.getElementById('edit-user-form');
+        const settingsForm = document.getElementById('settings-form');
+        
+        // --- State Management for Listeners ---
+        let unsubscribeListeners = [];
+
+        // --- UI Control Functions ---
+        const showAdminPanel = (user) => {
+            adminNameEl.textContent = user.email;
+            authContainer.style.display = 'none';
+            adminPanelContainer.style.display = 'flex';
+            
+            // Activate listeners if they aren't already active
+            if (unsubscribeListeners.length === 0) {
+                listenForDashboardStats();
+                listenForUsers();
+                listenForWithdrawals();
+            }
+            loadSettings();
+        };
+
+        const showAuthScreen = () => {
+            authContainer.style.display = 'flex';
+            adminPanelContainer.style.display = 'none';
+
+            // Detach all listeners when logged out to prevent memory leaks
+            unsubscribeListeners.forEach(unsub => unsub());
+            unsubscribeListeners = [];
+        };
+        
+        const showError = (elementId, message) => {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.style.display = 'block';
+        };
+        const clearErrors = () => {
+            document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
+        };
+
+        // --- Core Application Logic (The Brain) ---
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                db.collection('admins').doc(user.uid).get().then(doc => {
+                    if (doc.exists) {
+                        showAdminPanel(user);
+                    } else {
+                        alert("Authentication failed. You are not an authorized admin.");
+                        auth.signOut();
+                    }
+                }).catch(error => {
+                    console.error("Critical Error: Could not verify admin status.", error);
+                    alert("A critical error occurred while verifying your permissions. Check Firestore rules and internet connection.");
+                    auth.signOut();
+                });
+            } else {
+                showAuthScreen();
+                // Logic to show/hide signup tab based on admin existence
+                db.collection('admins').limit(1).get().then(snapshot => {
+                    document.querySelector('.auth-tab[data-tab="signup"]').style.display = snapshot.empty ? 'flex' : 'none';
+                });
+            }
+        });
+
+        // --- Data Loading & Real-time Listeners ---
+        const listenForDashboardStats = () => {
+            const usersUnsub = db.collection('users').onSnapshot(snapshot => {
+                document.getElementById('total-users').textContent = snapshot.size;
+                let totalEarnings = 0;
+                let activeToday = 0;
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+
+                snapshot.forEach(doc => {
+                    const user = doc.data();
+                    totalEarnings += user.balance || 0;
+                    if (user.lastActive && user.lastActive.toDate() >= todayStart) {
+                        activeToday++;
+                    }
+                });
+                document.getElementById('total-earnings').textContent = totalEarnings.toFixed(2);
+                document.getElementById('active-users').textContent = activeToday;
+            }, err => console.error("Error loading user stats:", err));
+
+            const withdrawalsUnsub = db.collection('withdrawals').where('status', '==', 'approved').onSnapshot(snapshot => {
+                let totalWithdrawn = 0;
+                snapshot.forEach(doc => {
+                    totalWithdrawn += doc.data().amount || 0;
+                });
+                document.getElementById('total-withdrawn').textContent = totalWithdrawn.toFixed(2);
+            }, err => console.error("Error loading withdrawal stats:", err));
+
+            unsubscribeListeners.push(usersUnsub, withdrawalsUnsub);
+        };
+
+        const listenForUsers = () => {
+            const usersUnsub = db.collection('users').orderBy('email').onSnapshot(snapshot => {
+                usersTableBody.innerHTML = '';
+                if (snapshot.empty) {
+                    usersTableBody.innerHTML = '<tr><td colspan="4">No users found.</td></tr>';
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const user = doc.data();
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.email}</td>
+                        <td>${(user.balance || 0).toFixed(2)}</td>
+                        <td><span class="status ${user.isBanned ? 'banned' : 'active'}">${user.isBanned ? 'Banned' : 'Active'}</span></td>
+                        <td><button class="action-btn edit-btn" data-id="${doc.id}"><i class="fas fa-edit"></i> Edit</button></td>
+                    `;
+                    usersTableBody.appendChild(row);
+                });
+            }, error => console.error("Error listening for users: ", error));
+            unsubscribeListeners.push(usersUnsub);
+        };
+
+        const listenForWithdrawals = () => {
+            const withdrawalsUnsub = db.collection('withdrawals').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+                withdrawalsTableBody.innerHTML = '';
+                if (snapshot.empty) {
+                    withdrawalsTableBody.innerHTML = '<tr><td colspan="6">No withdrawal requests found.</td></tr>';
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const w = doc.data();
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${w.userEmail || 'N/A'}</td>
+                        <td>${(w.amount || 0).toFixed(2)}</td>
+                        <td>${w.method || 'N/A'}</td>
+                        <td>${w.createdAt ? w.createdAt.toDate().toLocaleDateString() : 'N/A'}</td>
+                        <td><span class="status ${w.status}">${w.status}</span></td>
+                        <td>
+                            ${w.status === 'pending' ? `
+                            <button class="action-btn approve-btn" data-id="${doc.id}"><i class="fas fa-check"></i> Approve</button>
+                            <button class="action-btn reject-btn" data-id="${doc.id}"><i class="fas fa-times"></i> Reject</button>
+                            ` : `Processed`}
+                        </td>
+                    `;
+                    withdrawalsTableBody.appendChild(row);
+                });
+            }, error => console.error("Error listening for withdrawals: ", error));
+            unsubscribeListeners.push(withdrawalsUnsub);
+        };
+        
+        const loadSettings = () => {
+             db.collection('settings').doc('appConfig').get().then(doc => {
+                if(doc.exists) {
+                    const settings = doc.data();
+                    document.getElementById('min-withdrawal').value = settings.minWithdrawal || 10;
+                    document.getElementById('task-reward').value = settings.taskReward || 0.001;
+                    document.getElementById('referral-reward').value = settings.referralReward || 0.1;
+                }
+             }).catch(err => console.error("Error loading settings:", err));
+        };
+
+        // --- Event Listeners ---
+        loginForm.addEventListener('submit', e => {
+            e.preventDefault();
+            clearErrors();
+            auth.signInWithEmailAndPassword(loginForm['login-email'].value, loginForm['login-password'].value)
+                .catch(error => showError('login-error', error.message));
+        });
+
+        signupForm.addEventListener('submit', e => {
+            e.preventDefault();
+            clearErrors();
+            const password = signupForm['signup-password'].value;
+            if (password !== signupForm['signup-confirm-password'].value) {
+                showError('signup-error', 'Passwords do not match.'); return;
+            }
+            auth.createUserWithEmailAndPassword(signupForm['signup-email'].value, password)
+                .then(userCredential => db.collection('admins').doc(userCredential.user.uid).set({
+                    email: userCredential.user.email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }))
+                .then(() => alert('Admin account created successfully! You will be logged in automatically.'))
+                .catch(error => showError('signup-error', error.message));
+        });
+
+        logoutBtn.addEventListener('click', () => auth.signOut());
+
+        document.body.addEventListener('click', e => {
+            const button = e.target.closest('button');
+            if (!button) return;
+
+            if (button.classList.contains('edit-btn')) {
+                const userId = button.dataset.id;
+                db.collection('users').doc(userId).get().then(doc => {
+                    if (doc.exists) {
+                        const user = doc.data();
+                        document.getElementById('edit-user-id').value = doc.id;
+                        document.getElementById('edit-user-email').value = user.email;
+                        document.getElementById('edit-user-balance').value = user.balance || 0;
+                        document.getElementById('edit-user-status').value = user.isBanned ? 'banned' : 'active';
+                        editUserModal.style.display = 'flex';
+                    }
+                });
+            }
+            else if (button.classList.contains('approve-btn')) {
+                db.collection('withdrawals').doc(button.dataset.id).update({ status: 'approved', processedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            }
+            else if (button.classList.contains('reject-btn')) {
+                 db.collection('withdrawals').doc(button.dataset.id).update({ status: 'rejected', processedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            }
+            else if (button.classList.contains('close-btn')) {
+                document.getElementById(button.dataset.modalId).style.display = 'none';
+            }
+        });
+        
+        editUserForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const userId = document.getElementById('edit-user-id').value;
+            const updates = {
+                balance: parseFloat(document.getElementById('edit-user-balance').value),
+                isBanned: document.getElementById('edit-user-status').value === 'banned'
+            };
+            db.collection('users').doc(userId).update(updates)
+                .then(() => {
+                    editUserModal.style.display = 'none';
+                    alert('User updated successfully!');
+                })
+                .catch(error => alert('Error updating user: ' + error.message));
+        });
+
+        settingsForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const settings = {
+                minWithdrawal: parseFloat(document.getElementById('min-withdrawal').value),
+                taskReward: parseFloat(document.getElementById('task-reward').value),
+                referralReward: parseFloat(document.getElementById('referral-reward').value),
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            db.collection('settings').doc('appConfig').set(settings, { merge: true })
+                .then(() => alert("Settings saved successfully!"))
+                .catch(error => alert("Error saving settings: " + error.message));
+        });
+
+        // --- Navigation ---
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelector('.menu-item.active').classList.remove('active');
+                item.classList.add('active');
+                const sectionId = item.dataset.section + '-section';
+                document.querySelector('.content-section.active').classList.remove('active');
+                document.getElementById(sectionId).classList.add('active');
+                document.getElementById('content-title').textContent = item.textContent.trim();
+            });
+        });
+        document.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelector('.auth-tab.active').classList.remove('active');
+                tab.classList.add('active');
+                const tabName = tab.dataset.tab;
+                document.querySelector('.auth-tab-content.active').classList.remove('active');
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+            });
+        });
+    </script>
 </body>
 </html>
