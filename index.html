@@ -723,24 +723,24 @@
           <td>${new Date(request.timestamp).toLocaleString()}</td>
           <td class="${statusClass}">${request.status}</td>
           <td>
-            ${request.status === 'Pending' ? `
-              <div class="btn-group" role="group">
-                <button class="btn btn-sm btn-info action-btn" 
-                        onclick="updateWithdrawStatus('${request.userId}', '${Object.keys(allWithdrawRequests).find(key => allWithdrawRequests[key] === request)}', 'Processing')">
-                  <i class="fas fa-spinner"></i> Process
-                </button>
-                <button class="btn btn-sm btn-success action-btn" 
-                        onclick="updateWithdrawStatus('${request.userId}', '${Object.keys(allWithdrawRequests).find(key => allWithdrawRequests[key] === request)}', 'Success')">
-                  <i class="fas fa-check"></i> Success
-                </button>
-                <button class="btn btn-sm btn-danger action-btn" 
-                        onclick="updateWithdrawStatus('${request.userId}', '${Object.keys(allWithdrawRequests).find(key => allWithdrawRequests[key] === request)}', 'Rejected')">
-                  <i class="fas fa-times"></i> Reject
-                </button>
-              </div>
-            ` : `
-              <span class="badge bg-secondary">${request.status}</span>
-            `}
+            <!-- Always show all action buttons, disable the one for current status -->
+            <div class="btn-group" role="group">
+              <button class="btn btn-sm btn-info action-btn ${request.status === 'Processing' ? 'disabled' : ''}" 
+                      onclick="updateWithdrawStatus('${request.userId}', '${Object.keys(allWithdrawRequests).find(key => allWithdrawRequests[key] === request)}', 'Processing')"
+                      ${request.status === 'Processing' ? 'disabled' : ''}>
+                <i class="fas fa-spinner"></i> Process
+              </button>
+              <button class="btn btn-sm btn-success action-btn ${request.status === 'Success' ? 'disabled' : ''}" 
+                      onclick="updateWithdrawStatus('${request.userId}', '${Object.keys(allWithdrawRequests).find(key => allWithdrawRequests[key] === request)}', 'Success')"
+                      ${request.status === 'Success' ? 'disabled' : ''}>
+                <i class="fas fa-check"></i> Success
+              </button>
+              <button class="btn btn-sm btn-danger action-btn ${request.status === 'Rejected' ? 'disabled' : ''}" 
+                      onclick="updateWithdrawStatus('${request.userId}', '${Object.keys(allWithdrawRequests).find(key => allWithdrawRequests[key] === request)}', 'Rejected')"
+                      ${request.status === 'Rejected' ? 'disabled' : ''}>
+                <i class="fas fa-times"></i> Reject
+              </button>
+            </div>
           </td>
         `;
         withdrawalsTableBody.appendChild(row);
