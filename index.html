@@ -26,12 +26,12 @@
     body {
       background-color: var(--content-bg);
       font-size: 0.875rem;
-      padding-top: 56px; /* Height of the fixed header */
+      padding-top: 0; /* Removed header padding */
     }
     
     .sidebar {
       position: fixed;
-      top: 56px; /* Height of the fixed header */
+      top: 0;
       bottom: 0;
       left: 0;
       z-index: 100;
@@ -45,7 +45,7 @@
     .sidebar-sticky {
       position: relative;
       top: 0;
-      height: calc(100vh - 56px); /* Full height minus header height */
+      height: 100vh; /* Full height */
       padding-top: .5rem;
       overflow-x: hidden;
       overflow-y: auto;
@@ -71,25 +71,6 @@
       font-size: .75rem;
       text-transform: uppercase;
       padding: 0.5rem 1rem;
-    }
-    
-    /* Fixed header styles - Reduced height */
-    .navbar.fixed-top {
-      height: 48px; /* Reduced from 56px */
-      z-index: 1030;
-    }
-    
-    .navbar-brand {
-      padding-top: 0.5rem; /* Reduced padding */
-      padding-bottom: 0.5rem; /* Reduced padding */
-      font-size: 1.1rem; /* Smaller font */
-      background-color: rgba(0, 0, 0, .25);
-      box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
-    }
-    
-    .navbar .navbar-toggler {
-      top: 0.25rem; /* Adjusted position */
-      right: 1rem;
     }
     
     .main-content {
@@ -150,21 +131,12 @@
     @media (max-width: 767.98px) {
       .sidebar {
         width: 100%;
-        top: 48px; /* Match header height */
       }
       
       .main-content {
         margin-left: 0;
         width: 100%;
         padding: 10px; /* Even smaller padding on mobile */
-      }
-      
-      .sidebar-sticky {
-        height: calc(100vh - 48px); /* Match header height */
-      }
-      
-      .navbar.fixed-top {
-        height: 48px;
       }
     }
     
@@ -182,25 +154,10 @@
   </style>
 </head>
 <body>
-  <!-- Header Navbar (Fixed) - Reduced height -->
-  <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap shadow fixed-top">
-    <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#">
-      <i class="fas fa-cogs me-1"></i>Earning App Admin
-    </a>
-    <button class="navbar-toggler d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="navbar-nav">
-      <div class="nav-item text-nowrap">
-        <a class="nav-link px-3" href="#"><i class="fas fa-sign-out-alt me-1"></i>Sign out</a>
-      </div>
-    </div>
-  </header>
-
   <div class="container-fluid">
     <div class="row">
       <!-- Sidebar -->
-      <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+      <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar">
         <div class="position-sticky pt-0">
           <ul class="nav flex-column">
             <li class="nav-item">
@@ -481,6 +438,36 @@
     </div>
   </div>
 
+  <!-- Edit Status Modal -->
+  <div class="modal fade" id="editStatusModal" tabindex="-1" aria-labelledby="editStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editStatusModalLabel">Edit Withdrawal Status</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Current status: <strong id="current-status-display"></strong></p>
+          <p>Select new status:</p>
+          <div class="d-grid gap-2">
+            <button class="btn btn-info" id="processing-btn" onclick="updateWithdrawStatusFromModal('Processing')">
+              <i class="fas fa-spinner"></i> Processing
+            </button>
+            <button class="btn btn-success" id="success-btn" onclick="updateWithdrawStatusFromModal('Success')">
+              <i class="fas fa-check"></i> Success
+            </button>
+            <button class="btn btn-danger" id="rejected-btn" onclick="updateWithdrawStatusFromModal('Rejected')">
+              <i class="fas fa-times"></i> Rejected
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div class="toast-container position-fixed bottom-0 end-0 p-2">
     <div id="live-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
@@ -541,6 +528,9 @@
     let allUsers = {};
     let allWithdrawRequests = {};
     let currentUserEditId = null;
+    let currentEditUserId = null;
+    let currentEditRequestKey = null;
+    let currentEditStatus = null;
 
     // Show section function
     function showSection(sectionId) {
@@ -847,65 +837,30 @@
     // Open edit status modal
     function openEditStatusModal(userId, requestKey, currentStatus) {
       // Store current request info
-      window.currentEditUserId = userId;
-      window.currentEditRequestKey = requestKey;
-      window.currentEditStatus = currentStatus;
+      currentEditUserId = userId;
+      currentEditRequestKey = requestKey;
+      currentEditStatus = currentStatus;
       
-      // Create modal dynamically
-      const modalHtml = `
-        <div class="modal fade" id="editStatusModal" tabindex="-1" aria-labelledby="editStatusModalLabel" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="editStatusModalLabel">Edit Withdrawal Status</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <p>Current status: <strong>${currentStatus}</strong></p>
-                <p>Select new status:</p>
-                <div class="d-grid gap-2">
-                  <button class="btn ${currentStatus === 'Processing' ? 'btn-secondary disabled' : 'btn-info'}" 
-                          ${currentStatus === 'Processing' ? 'disabled' : ''} 
-                          onclick="updateWithdrawStatus('${userId}', '${requestKey}', 'Processing')">
-                    <i class="fas fa-spinner"></i> Processing
-                  </button>
-                  <button class="btn ${currentStatus === 'Success' ? 'btn-secondary disabled' : 'btn-success'}" 
-                          ${currentStatus === 'Success' ? 'disabled' : ''} 
-                          onclick="updateWithdrawStatus('${userId}', '${requestKey}', 'Success')">
-                    <i class="fas fa-check"></i> Success
-                  </button>
-                  <button class="btn ${currentStatus === 'Rejected' ? 'btn-secondary disabled' : 'btn-danger'}" 
-                          ${currentStatus === 'Rejected' ? 'disabled' : ''} 
-                          onclick="updateWithdrawStatus('${userId}', '${requestKey}', 'Rejected')">
-                    <i class="fas fa-times"></i> Rejected
-                  </button>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
+      // Update modal content
+      document.getElementById('current-status-display').textContent = currentStatus;
       
-      // Remove existing modal if any
-      const existingModal = document.getElementById('editStatusModal');
-      if (existingModal) {
-        existingModal.remove();
-      }
-      
-      // Add new modal to body
-      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      // Disable current status button
+      document.getElementById('processing-btn').disabled = (currentStatus === 'Processing');
+      document.getElementById('success-btn').disabled = (currentStatus === 'Success');
+      document.getElementById('rejected-btn').disabled = (currentStatus === 'Rejected');
       
       // Show modal
       const modal = new bootstrap.Modal(document.getElementById('editStatusModal'));
       modal.show();
+    }
+
+    // Update withdrawal request status from modal
+    function updateWithdrawStatusFromModal(newStatus) {
+      updateWithdrawStatus(currentEditUserId, currentEditRequestKey, newStatus);
       
-      // Clean up modal after it's hidden
-      document.getElementById('editStatusModal').addEventListener('hidden.bs.modal', function () {
-        this.remove();
-      });
+      // Hide modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('editStatusModal'));
+      modal.hide();
     }
 
     // Update dashboard stats
@@ -926,15 +881,6 @@
         showToast(`Withdrawal request status updated to ${newStatus}!`, 'success');
         // Refresh the table to show updated status
         renderWithdrawRequestsTable();
-        
-        // Hide edit status modal if it exists
-        const editModal = document.getElementById('editStatusModal');
-        if (editModal) {
-          const modalInstance = bootstrap.Modal.getInstance(editModal);
-          if (modalInstance) {
-            modalInstance.hide();
-          }
-        }
       }).catch((error) => {
         showToast(`Error updating withdrawal request: ${error.message}`, 'danger');
       });
@@ -989,6 +935,7 @@
     window.saveUserEdit = saveUserEdit;
     window.updateWithdrawStatus = updateWithdrawStatus;
     window.openEditStatusModal = openEditStatusModal;
+    window.updateWithdrawStatusFromModal = updateWithdrawStatusFromModal;
     window.filterUsers = filterUsers;
   </script>
 </body>
