@@ -2,368 +2,826 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CashReward Admin Panel</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .sidebar { background-color: #1f2937; color: #d1d5db; }
-        .sidebar a { border-left: 3px solid transparent; transition: all 0.2s; }
-        .sidebar a:hover { background-color: #374151; }
-        .sidebar a.active { background-color: #4f46e5; color: white; border-left-color: #818cf8; }
-        .stat-card { background-color: white; border-radius: 0.5rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
-        .page { display: none; }
-        .page.active { display: block; animation: fadeIn 0.5s; }
-        .btn { padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 600; transition: all 0.2s; }
-        .btn:active { transform: scale(0.95); }
-        .btn-primary { background-color: #4f46e5; color: white; }
-        .btn-primary:hover { background-color: #4338ca; }
-        .btn-success { background-color: #10b981; color: white; }
-        .btn-danger { background-color: #ef4444; color: white; }
-        .btn-warning { background-color: #f59e0b; color: white; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
-        th { background-color: #f9fafb; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Earning App</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --bs-primary: #0d6efd;
+      --bs-success: #198754;
+      --bs-info: #0dcaf0;
+      --bs-warning: #ffc107;
+      --bs-danger: #dc3545;
+      --bs-dark: #212529;
+      --sidebar-bg: #343a40;
+      --sidebar-color: #fff;
+      --sidebar-hover-bg: #495057;
+      --content-bg: #f8f9fa;
+    }
+    
+    body {
+      background-color: var(--content-bg);
+      font-size: 0.875rem;
+      padding-top: 56px; /* Height of the fixed header */
+    }
+    
+    .sidebar {
+      position: fixed;
+      top: 56px; /* Height of the fixed header */
+      bottom: 0;
+      left: 0;
+      z-index: 100;
+      padding: 0;
+      box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+      background-color: var(--sidebar-bg);
+      color: var(--sidebar-color);
+      width: 220px;
+    }
+    
+    .sidebar-sticky {
+      position: relative;
+      top: 0;
+      height: calc(100vh - 56px); /* Full height minus header height */
+      padding-top: .5rem;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    
+    .sidebar .nav-link {
+      font-weight: 500;
+      color: #adb5bd;
+      padding: 0.5rem 1rem;
+    }
+    
+    .sidebar .nav-link:hover {
+      color: #fff;
+      background-color: var(--sidebar-hover-bg);
+    }
+    
+    .sidebar .nav-link.active {
+      color: #fff;
+      background-color: var(--bs-primary);
+    }
+    
+    .sidebar-heading {
+      font-size: .75rem;
+      text-transform: uppercase;
+      padding: 0.5rem 1rem;
+    }
+    
+    /* Fixed header styles */
+    .navbar.fixed-top {
+      height: 56px;
+      z-index: 1030;
+    }
+    
+    .navbar-brand {
+      padding-top: 0.75rem;
+      padding-bottom: 0.75rem;
+      font-size: 1.25rem;
+      background-color: rgba(0, 0, 0, .25);
+      box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
+    }
+    
+    .navbar .navbar-toggler {
+      top: 0.5rem;
+      right: 1rem;
+    }
+    
+    .main-content {
+      margin-left: 220px; /* Same as sidebar width */
+      padding: 20px;
+      width: calc(100% - 220px); /* Adjust width to account for sidebar */
+    }
+    
+    .section-title {
+      border-bottom: 1px solid #dee2e6;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-card {
+      border-left: 4px solid var(--bs-primary);
+    }
+    
+    .table-responsive {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .action-btn {
+      margin: 2px;
+      padding: 5px 10px;
+      font-size: 0.8rem;
+    }
+    
+    .status-badge {
+      font-size: 0.75rem;
+    }
+    
+    .user-active { color: #198754; font-weight: bold; }
+    .user-blocked { color: #dc3545; font-weight: bold; }
+    
+    .withdraw-pending { color: #ffc107; font-weight: bold; }
+    .withdraw-processing { color: #17a2b8; font-weight: bold; }
+    .withdraw-success { color: #28a745; font-weight: bold; }
+    .withdraw-rejected { color: #dc3545; font-weight: bold; }
+    
+    .toast-container {
+      z-index: 1050;
+    }
+    
+    .search-box {
+      margin-bottom: 15px;
+    }
+    
+    /* Ensure sidebar is visible on larger screens */
+    @media (min-width: 768px) {
+      .sidebar {
+        display: block !important;
+      }
+    }
+    
+    /* Adjustments for smaller screens */
+    @media (max-width: 767.98px) {
+      .sidebar {
+        width: 100%;
+        top: 56px;
+      }
+      
+      .main-content {
+        margin-left: 0;
+        width: 100%;
+      }
+      
+      .sidebar-sticky {
+        height: calc(100vh - 56px);
+      }
+    }
+  </style>
 </head>
 <body>
-
-    <!-- Admin Login -->
-    <div id="admin-login-view" class="min-h-screen flex items-center justify-center bg-gray-100">
-        <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-            <h1 class="text-3xl font-bold text-center text-gray-900">Admin Panel Login</h1>
-            <input id="admin-email" type="email" placeholder="Admin Email" class="w-full px-4 py-2 border rounded-lg">
-            <input id="admin-password" type="password" placeholder="Password" class="w-full px-4 py-2 border rounded-lg">
-            <button id="admin-login-btn" class="w-full btn btn-primary">Login</button>
-        </div>
+  <!-- Header Navbar (Fixed) -->
+  <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap shadow fixed-top">
+    <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#">
+      <i class="fas fa-cogs me-2"></i>Earning App Admin
+    </a>
+    <button class="navbar-toggler d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="navbar-nav">
+      <div class="nav-item text-nowrap">
+        <a class="nav-link px-3" href="#"><i class="fas fa-sign-out-alt me-1"></i>Sign out</a>
+      </div>
     </div>
+  </header>
 
-    <!-- Main Admin Dashboard -->
-    <div id="admin-dashboard" class="hidden">
-        <div class="flex h-screen">
-            <!-- Sidebar -->
-            <aside class="sidebar w-64 flex-shrink-0">
-                <div class="p-4 text-2xl font-bold text-white">CashReward</div>
-                <nav class="mt-8">
-                    <a href="#" class="nav-link block py-3 px-4" data-page="dashboard-page"><i data-lucide="home" class="inline-block w-5 h-5 mr-2"></i>Dashboard</a>
-                    <a href="#" class="nav-link block py-3 px-4" data-page="users-page"><i data-lucide="users" class="inline-block w-5 h-5 mr-2"></i>Users</a>
-                    <a href="#" class="nav-link block py-3 px-4" data-page="withdrawals-page"><i data-lucide="dollar-sign" class="inline-block w-5 h-5 mr-2"></i>Withdrawals</a>
-                    <a href="#" class="nav-link block py-3 px-4" data-page="notifications-page"><i data-lucide="send" class="inline-block w-5 h-5 mr-2"></i>Notifications</a>
-                    <a href="#" class="nav-link block py-3 px-4" data-page="settings-page"><i data-lucide="settings" class="inline-block w-5 h-5 mr-2"></i>Settings</a>
-                    <a href="#" id="admin-logout-btn" class="block py-3 px-4 mt-8"><i data-lucide="log-out" class="inline-block w-5 h-5 mr-2"></i>Logout</a>
-                </nav>
-            </aside>
-
-            <!-- Main Content -->
-            <main class="flex-1 p-8 overflow-y-auto">
-                <!-- Dashboard Page -->
-                <div id="dashboard-page" class="page">
-                    <h1 class="text-3xl font-bold mb-6">Dashboard</h1>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="stat-card p-6"><h2 class="text-gray-500 text-lg">Total Users</h2><p id="total-users" class="text-4xl font-bold mt-2">0</p></div>
-                        <div class="stat-card p-6"><h2 class="text-gray-500 text-lg">Pending Withdrawals</h2><p id="pending-withdrawals" class="text-4xl font-bold mt-2">0</p></div>
-                    </div>
-                </div>
-
-                <!-- Users Page -->
-                <div id="users-page" class="page">
-                    <h1 class="text-3xl font-bold mb-6">User Management</h1>
-                    <div class="bg-white shadow rounded-lg overflow-x-auto">
-                        <table class="min-w-full">
-                            <thead><tr><th>Name</th><th>Email</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
-                            <tbody id="users-table-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Withdrawals Page -->
-                <div id="withdrawals-page" class="page">
-                    <h1 class="text-3xl font-bold mb-6">Withdrawal Requests</h1>
-                     <div class="bg-white shadow rounded-lg overflow-x-auto">
-                        <table>
-                            <thead><tr><th>User Name</th><th>Amount</th><th>Method</th><th>Details</th><th>Requested At</th><th>Actions</th></tr></thead>
-                            <tbody id="withdrawals-table-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Notifications Page -->
-                <div id="notifications-page" class="page">
-                    <h1 class="text-3xl font-bold mb-6">Send Notification</h1>
-                    <div class="stat-card p-6 max-w-lg">
-                        <div class="mb-4"><label for="notification-title" class="block font-semibold mb-2">Title</label><input type="text" id="notification-title" class="w-full px-4 py-2 border rounded-lg"></div>
-                        <div class="mb-6"><label for="notification-message" class="block font-semibold mb-2">Message</label><textarea id="notification-message" rows="4" class="w-full px-4 py-2 border rounded-lg"></textarea></div>
-                        <button id="send-notification-btn" class="btn btn-primary">Send to All Users</button>
-                    </div>
-                </div>
-
-                <!-- Settings Page -->
-                <div id="settings-page" class="page">
-                    <h1 class="text-3xl font-bold mb-6">App Settings</h1>
-                    <div class="stat-card p-6 max-w-lg">
-                        <div class="mb-6"><label for="min-withdrawal" class="block font-semibold mb-2">Minimum Withdrawal (Coins)</label><input type="number" id="min-withdrawal" class="w-full px-4 py-2 border rounded-lg"></div>
-                        <div class="mb-6"><label for="daily-ad-limit" class="block font-semibold mb-2">Daily Ad Watch Limit</label><input type="number" id="daily-ad-limit" class="w-full px-4 py-2 border rounded-lg"></div>
-                        <div class="mb-6">
-                            <label class="block font-semibold mb-2">Coin Value</label>
-                            <div class="flex items-center space-x-2">
-                                <input type="number" id="coin-value-coins" class="w-full px-4 py-2 border rounded-lg">
-                                <span>Coins = ₹</span>
-                                <input type="number" id="coin-value-inr" class="w-full px-4 py-2 border rounded-lg">
-                            </div>
-                        </div>
-                        <div class="mb-6"><label class="block font-semibold mb-2">Payment Methods (comma-separated)</label><input type="text" id="payment-methods" class="w-full px-4 py-2 border rounded-lg" placeholder="e.g. UPI,Paytm"></div>
-                        <button id="save-settings-btn" class="btn btn-primary">Save Settings</button>
-                    </div>
-                </div>
-            </main>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+        <div class="position-sticky pt-0">
+          <ul class="nav flex-column">
+            <li class="nav-item">
+              <a class="nav-link active" href="#" onclick="showSection('dashboard')">
+                <i class="fas fa-tachometer-alt me-2"></i>
+                Dashboard
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onclick="showSection('users')">
+                <i class="fas fa-users me-2"></i>
+                Users
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onclick="showSection('withdrawals')">
+                <i class="fas fa-money-bill-wave me-2"></i>
+                Withdrawals
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onclick="showSection('settings')">
+                <i class="fas fa-cog me-2"></i>
+                App Settings
+              </a>
+            </li>
+          </ul>
         </div>
-    </div>
-    
-    <!-- Alert Modal -->
-    <div id="custom-alert" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg p-6 w-full max-w-sm text-center shadow-xl">
-            <p id="alert-message" class="mb-4 text-gray-800"></p>
-            <button id="alert-ok-btn" class="btn btn-primary px-6">OK</button>
-        </div>
-    </div>
+      </nav>
 
-    <!-- Confirmation Modal -->
-    <div id="custom-confirm" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg p-6 w-full max-w-sm text-center shadow-xl">
-            <p id="confirm-message" class="mb-6 text-gray-800"></p>
-            <div class="flex justify-center space-x-4">
-                <button id="confirm-cancel-btn" class="btn bg-gray-200 text-gray-800 px-6">Cancel</button>
-                <button id="confirm-ok-btn" class="btn btn-danger px-6">Confirm</button>
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="section-content">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">Dashboard</h1>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="row">
+            <div class="col-md-3 mb-3">
+              <div class="card stat-card h-100">
+                <div class="card-body">
+                  <h5 class="card-title">Total Users</h5>
+                  <p class="card-text display-6" id="total-users">0</p>
+                </div>
+              </div>
             </div>
+            <div class="col-md-3 mb-3">
+              <div class="card stat-card h-100">
+                <div class="card-body">
+                  <h5 class="card-title">Active Users</h5>
+                  <p class="card-text display-6" id="active-users">0</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <div class="card stat-card h-100">
+                <div class="card-body">
+                  <h5 class="card-title">Pending Withdrawals</h5>
+                  <p class="card-text display-6" id="pending-withdrawals">0</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <div class="card stat-card h-100">
+                <div class="card-body">
+                  <h5 class="card-title">Total Revenue</h5>
+                  <p class="card-text display-6" id="total-revenue">$0.00</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="card mt-4">
+            <div class="card-header">
+              <h5 class="card-title mb-0">Recent Activity</h5>
+            </div>
+            <div class="card-body">
+              <div id="recent-activity">
+                <p class="text-muted">No recent activity</p>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <!-- Users Section -->
+        <div id="users-section" class="section-content" style="display: none;">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">User Management</h1>
+          </div>
+
+          <!-- Search and Filter -->
+          <div class="search-box">
+            <div class="row g-2">
+              <div class="col-md-6">
+                <input type="text" id="user-search" class="form-control" placeholder="Search by username or ID...">
+              </div>
+              <div class="col-md-3">
+                <select id="user-status-filter" class="form-control">
+                  <option value="all">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="blocked">Blocked</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <button class="btn btn-primary w-100" onclick="filterUsers()">
+                  <i class="fas fa-filter me-1"></i>Filter
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Users Table -->
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0">Registered Users</h5>
+              <div>
+                <span class="badge bg-info" id="users-count">Total: 0</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead class="table-light">
+                    <tr>
+                      <th>ID</th>
+                      <th>Username</th>
+                      <th>Name</th>
+                      <th>Coins</th>
+                      <th>Balance ($)</th>
+                      <th>Referrals</th>
+                      <th>Ref Earn</th>
+                      <th>Status</th>
+                      <th>Created</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="users-table-body">
+                    <!-- User rows will be populated here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Withdrawals Section -->
+        <div id="withdrawals-section" class="section-content" style="display: none;">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">Withdrawal Management</h1>
+          </div>
+
+          <!-- Withdrawal Requests Table -->
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0">Withdrawal Requests</h5>
+              <div>
+                <span class="badge bg-danger" id="pending-requests-count">Pending: 0</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead class="table-light">
+                    <tr>
+                      <th>User</th>
+                      <th>Method</th>
+                      <th>Mobile</th>
+                      <th>Amount ($)</th>
+                      <th>Request Date</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="withdrawals-table-body">
+                    <!-- Withdrawal request rows will be populated here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings-section" class="section-content" style="display: none;">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">App Settings</h1>
+          </div>
+
+          <!-- App Configuration Card -->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title mb-0">Configuration</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <div class="mb-3">
+                    <label for="points-per-ad" class="form-label">Points per Ad View</label>
+                    <input type="number" class="form-control" id="points-per-ad" value="10">
+                    <div class="form-text">Number of coins earned per ad view</div>
+                  </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <div class="mb-3">
+                    <label for="coins-for-conversion" class="form-label">Coins for Conversion</label>
+                    <input type="number" class="form-control" id="coins-for-conversion" value="1000">
+                    <div class="form-text">Number of coins required for conversion</div>
+                  </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <div class="mb-3">
+                    <label for="value-per-conversion" class="form-label">Value per Conversion ($)</label>
+                    <input type="number" step="0.01" class="form-control" id="value-per-conversion" value="0.30">
+                    <div class="form-text">USD value for the conversion amount</div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <div class="mb-3">
+                    <label for="referral-reward" class="form-label">Referral Reward (Coins)</label>
+                    <input type="number" class="form-control" id="referral-reward" value="10">
+                    <div class="form-text">Coins given to referrer for each new user</div>
+                  </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <div class="mb-3">
+                    <label for="referral-claim-threshold" class="form-label">Referral Claim Threshold</label>
+                    <input type="number" class="form-control" id="referral-claim-threshold" value="200">
+                    <div class="form-text">Coins needed to claim referral earnings</div>
+                  </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <div class="mb-3">
+                    <label for="min-withdraw-amount" class="form-label">Minimum Withdraw Amount ($)</label>
+                    <input type="number" step="0.01" class="form-control" id="min-withdraw-amount" value="5.00">
+                    <div class="form-text">Minimum amount for withdrawal requests</div>
+                  </div>
+                </div>
+              </div>
+              <button id="save-config-btn" class="btn btn-success">
+                <i class="fas fa-save me-1"></i>Save Configuration
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
+  </div>
 
-    <script type="module">
-        // Updated Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyD3BGZ0MVLpbQbIpLUAnYvWNEIyk7Y6S0Q",
-            authDomain: "earning-app-80258.firebaseapp.com",
-            databaseURL: "https://earning-app-80258-default-rtdb.firebaseio.com",
-            projectId: "earning-app-80258",
-            storageBucket: "earning-app-80258.appspot.com",
-            messagingSenderId: "25930019210",
-            appId: "1:25930019210:web:6441562811d3e7e9631873",
-            measurementId: "G-P9HX6XXT1Q"
-        };
+  <!-- Toast Container -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="live-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <strong class="me-auto">Notification</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body" id="toast-body">
+        Operation completed successfully.
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyD3BGZ0MVLpbQbIpLUAnYvWNEIyk7Y6S0Q",
+      authDomain: "earning-app-80258.firebaseapp.com",
+      databaseURL: "https://earning-app-80258-default-rtdb.firebaseio.com",
+      projectId: "earning-app-80258",
+      storageBucket: "earning-app-80258.appspot.com",
+      messagingSenderId: "25930019210",
+      appId: "1:25930019210:web:6441562811d3e7e9631873",
+      measurementId: "G-P9HX6XXT1Q"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // DOM Elements
+    const sections = {
+      dashboard: document.getElementById('dashboard-section'),
+      users: document.getElementById('users-section'),
+      withdrawals: document.getElementById('withdrawals-section'),
+      settings: document.getElementById('settings-section')
+    };
+
+    const usersTableBody = document.getElementById('users-table-body');
+    const withdrawalsTableBody = document.getElementById('withdrawals-table-body');
+    const usersCountSpan = document.getElementById('users-count');
+    const pendingRequestsCountSpan = document.getElementById('pending-requests-count');
+    const totalUsersElement = document.getElementById('total-users');
+    const activeUsersElement = document.getElementById('active-users');
+    const pendingWithdrawalsElement = document.getElementById('pending-withdrawals');
+    const totalRevenueElement = document.getElementById('total-revenue');
+    const saveConfigBtn = document.getElementById('save-config-btn');
+    const toastElement = document.getElementById('live-toast');
+    const toast = new bootstrap.Toast(toastElement);
+    const toastBody = document.getElementById('toast-body');
+
+    // State variables
+    let allUsers = {};
+    let allWithdrawRequests = {};
+
+    // Show section function
+    function showSection(sectionId) {
+      console.log("Showing section:", sectionId); // Debug log
+      // Hide all sections
+      Object.values(sections).forEach(section => {
+        section.style.display = 'none';
+      });
+      
+      // Show selected section
+      if (sections[sectionId]) {
+        sections[sectionId].style.display = 'block';
+      }
+      
+      // Update active nav link
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+      });
+      const activeLink = document.querySelector(`.nav-link[onclick="showSection('${sectionId}')"]`);
+      if (activeLink) {
+        activeLink.classList.add('active');
+      }
+      
+      // Load data for the section if needed
+      if (sectionId === 'users') {
+        loadUsers();
+      } else if (sectionId === 'withdrawals') {
+        loadWithdrawRequests();
+      } else if (sectionId === 'settings') {
+        loadAppConfig();
+      } else if (sectionId === 'dashboard') {
+        // Dashboard stats are updated by other sections
+        updateDashboardStats();
+      }
+    }
+
+    // Load app configuration
+    function loadAppConfig() {
+      database.ref('appConfig').once('value').then((snapshot) => {
+        const config = snapshot.val();
+        if (config) {
+          document.getElementById('points-per-ad').value = config.pointsPerAd || 10;
+          document.getElementById('coins-for-conversion').value = config.coinsForConversion || 1000;
+          document.getElementById('value-per-conversion').value = config.valuePerConversion || 0.30;
+          document.getElementById('referral-reward').value = config.referralReward || 10;
+          document.getElementById('referral-claim-threshold').value = config.referralClaimThreshold || 200;
+          document.getElementById('min-withdraw-amount').value = config.minWithdrawAmount || 5.00;
+        }
+      }).catch((error) => {
+        showToast(`Error loading config: ${error.message}`, 'danger');
+      });
+    }
+
+    // Save app configuration
+    saveConfigBtn.addEventListener('click', () => {
+      const pointsPerAd = parseInt(document.getElementById('points-per-ad').value);
+      const coinsForConversion = parseInt(document.getElementById('coins-for-conversion').value);
+      const valuePerConversion = parseFloat(document.getElementById('value-per-conversion').value);
+      const referralReward = parseInt(document.getElementById('referral-reward').value);
+      const referralClaimThreshold = parseInt(document.getElementById('referral-claim-threshold').value);
+      const minWithdrawAmount = parseFloat(document.getElementById('min-withdraw-amount').value);
+
+      if (isNaN(pointsPerAd) || isNaN(coinsForConversion) || isNaN(valuePerConversion) ||
+          isNaN(referralReward) || isNaN(referralClaimThreshold) || isNaN(minWithdrawAmount)) {
+        showToast('Please enter valid numbers for all configuration fields.', 'warning');
+        return;
+      }
+
+      database.ref('appConfig').set({
+        pointsPerAd: pointsPerAd,
+        coinsForConversion: coinsForConversion,
+        valuePerConversion: valuePerConversion,
+        referralReward: referralReward,
+        referralClaimThreshold: referralClaimThreshold,
+        minWithdrawAmount: minWithdrawAmount
+      }).then(() => {
+        showToast('Configuration saved successfully!', 'success');
+      }).catch((error) => {
+        showToast(`Error saving config: ${error.message}`, 'danger');
+      });
+    });
+
+    // Load users and set up real-time listener
+    function loadUsers() {
+      database.ref('users').on('value', (snapshot) => {
+        allUsers = snapshot.val() || {};
+        renderUsersTable();
+        updateDashboardStats();
+      }, (error) => {
+        showToast(`Error loading users: ${error.message}`, 'danger');
+      });
+    }
+
+    // Filter users based on search and status
+    function filterUsers() {
+      renderUsersTable();
+    }
+
+    // Render users table
+    function renderUsersTable() {
+      usersTableBody.innerHTML = '';
+      let userCount = 0;
+      let activeUserCount = 0;
+      
+      const searchTerm = document.getElementById('user-search').value.toLowerCase();
+      const statusFilter = document.getElementById('user-status-filter').value;
+
+      Object.keys(allUsers).forEach(userId => {
+        const user = allUsers[userId];
         
-        const ADMIN_UIDS = ["EvPOMOxxb0VmfUUWQR0hDEBhexg2"]; 
+        // Apply search filter
+        if (searchTerm && 
+            !userId.toLowerCase().includes(searchTerm) && 
+            !(user.username && user.username.toLowerCase().includes(searchTerm)) &&
+            !(user.firstName && user.firstName.toLowerCase().includes(searchTerm))) {
+          return; // Skip this user
+        }
+        
+        // Apply status filter
+        if (statusFilter !== 'all') {
+          const isBlocked = user.isBlocked || false;
+          if ((statusFilter === 'active' && isBlocked) || 
+              (statusFilter === 'blocked' && !isBlocked)) {
+            return; // Skip this user
+          }
+        }
+        
+        userCount++;
+        if (!user.isBlocked) activeUserCount++;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${userId.substring(0, 6)}...</td>
+          <td>${user.username || 'N/A'}</td>
+          <td>${user.firstName || 'N/A'}</td>
+          <td>${user.points || 0}</td>
+          <td>$${(user.balance || 0).toFixed(2)}</td>
+          <td>${user.referralCount || 0}</td>
+          <td>${user.referralEarnings || 0}</td>
+          <td>
+            <span class="${user.isBlocked ? 'user-blocked' : 'user-active'}">
+              <i class="fas fa-${user.isBlocked ? 'times-circle' : 'check-circle'}"></i>
+              ${user.isBlocked ? 'Blocked' : 'Active'}
+            </span>
+          </td>
+          <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+          <td>
+            <button class="btn btn-sm btn-${user.isBlocked ? 'success' : 'warning'} action-btn" 
+                    onclick="toggleUserStatus('${userId}', ${!user.isBlocked})">
+              <i class="fas fa-${user.isBlocked ? 'unlock' : 'ban'}"></i>
+              ${user.isBlocked ? 'Unblock' : 'Block'}
+            </button>
+          </td>
+        `;
+        usersTableBody.appendChild(row);
+      });
 
-        // Updated Firebase imports
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, query, where, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+      usersCountSpan.textContent = `Total: ${userCount}`;
+      totalUsersElement.textContent = userCount;
+      activeUsersElement.textContent = activeUserCount;
+    }
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    // Toggle user block status
+    function toggleUserStatus(userId, shouldBeBlocked) {
+      database.ref('users/' + userId).update({
+        isBlocked: shouldBeBlocked
+      }).then(() => {
+        showToast(`User ${shouldBeBlocked ? 'blocked' : 'unblocked'} successfully!`, 'success');
+        // Refresh the table to show updated status
+        renderUsersTable();
+      }).catch((error) => {
+        showToast(`Error updating user: ${error.message}`, 'danger');
+      });
+    }
 
-        const loginView = document.getElementById('admin-login-view');
-        const dashboardView = document.getElementById('admin-dashboard');
-
-        window.onload = () => {
-            lucide.createIcons();
-            setupEventListeners();
-            onAuthStateChanged(auth, (user) => {
-                if (user && ADMIN_UIDS.includes(user.uid)) {
-                    loginView.style.display = 'none';
-                    dashboardView.style.display = 'block';
-                    navigateTo('dashboard-page');
-                    loadDashboardData();
-                    loadUsers();
-                    loadWithdrawals();
-                    loadSettings();
-                } else {
-                    loginView.style.display = 'flex';
-                    dashboardView.style.display = 'none';
-                }
+    // Load withdrawal requests and set up real-time listener
+    function loadWithdrawRequests() {
+      database.ref('users').on('value', (snapshot) => {
+        const users = snapshot.val() || {};
+        allWithdrawRequests = {};
+        
+        // Collect all withdrawal requests
+        Object.keys(users).forEach(userId => {
+          const user = users[userId];
+          if (user.withdrawHistory) {
+            Object.keys(user.withdrawHistory).forEach(requestId => {
+              const request = user.withdrawHistory[requestId];
+              allWithdrawRequests[`${userId}_${requestId}`] = {
+                ...request,
+                userId: userId,
+                username: user.username || user.firstName || 'Unknown'
+              };
             });
-        };
+          }
+        });
+        
+        renderWithdrawRequestsTable();
+        updateDashboardStats();
+      }, (error) => {
+        showToast(`Error loading withdrawal requests: ${error.message}`, 'danger');
+      });
+    }
 
-        function navigateTo(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-                if (link.dataset.page === pageId) link.classList.add('active');
-            });
-        }
+    // Render withdrawal requests table
+    function renderWithdrawRequestsTable() {
+      withdrawalsTableBody.innerHTML = '';
+      let pendingCount = 0;
+      let totalRevenue = 0;
 
-        function setupEventListeners() {
-            document.getElementById('admin-login-btn').addEventListener('click', handleAdminLogin);
-            document.getElementById('admin-logout-btn').addEventListener('click', () => signOut(auth));
-            document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
-            document.getElementById('send-notification-btn').addEventListener('click', sendNotification);
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.addEventListener('click', (e) => { e.preventDefault(); navigateTo(link.dataset.page); });
-            });
-        }
+      // Convert to array and sort by timestamp (newest first)
+      const requestsArray = Object.values(allWithdrawRequests);
+      requestsArray.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-        async function handleAdminLogin() {
-            const email = document.getElementById('admin-email').value;
-            const password = document.getElementById('admin-password').value;
-            try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                if (!ADMIN_UIDS.includes(userCredential.user.uid)) {
-                    await signOut(auth);
-                    showAlert("Aap is panel ko access karne ke liye authorized nahi hain.");
-                }
-            } catch (error) { showAlert(error.message); }
-        }
+      requestsArray.forEach(request => {
+        if (request.status === 'Pending') pendingCount++;
+        if (request.status === 'Success') totalRevenue += parseFloat(request.amount);
+        
+        const statusClass = `withdraw-${request.status.toLowerCase()}`;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${request.username} (${request.userId.substring(0, 6)}...)</td>
+          <td>${request.method}</td>
+          <td>${request.mobileNumber}</td>
+          <td>$${parseFloat(request.amount).toFixed(2)}</td>
+          <td>${new Date(request.timestamp).toLocaleString()}</td>
+          <td class="${statusClass}">${request.status}</td>
+          <td>
+            ${request.status === 'Pending' ? `
+              <div class="btn-group" role="group">
+                <button class="btn btn-sm btn-info action-btn" 
+                        onclick="updateWithdrawStatus('${request.userId}', '${Object.keys(allWithdrawRequests).find(key => allWithdrawRequests[key] === request)}', 'Processing')">
+                  <i class="fas fa-spinner"></i> Process
+                </button>
+                <button class="btn btn-sm btn-success action-btn" 
+                        onclick="updateWithdrawStatus('${request.userId}', '${Object.keys(allWithdrawRequests).find(key => allWithdrawRequests[key] === request)}', 'Success')">
+                  <i class="fas fa-check"></i> Success
+                </button>
+                <button class="btn btn-sm btn-danger action-btn" 
+                        onclick="updateWithdrawStatus('${request.userId}', '${Object.keys(allWithdrawRequests).find(key => allWithdrawRequests[key] === request)}', 'Rejected')">
+                  <i class="fas fa-times"></i> Reject
+                </button>
+              </div>
+            ` : `
+              <span class="badge bg-secondary">${request.status}</span>
+            `}
+          </td>
+        `;
+        withdrawalsTableBody.appendChild(row);
+      });
 
-        function loadDashboardData() {
-            onSnapshot(collection(db, "users"), snap => { document.getElementById('total-users').textContent = snap.size; });
-            onSnapshot(query(collection(db, "withdrawals"), where("status", "==", "pending")), snap => { document.getElementById('pending-withdrawals').textContent = snap.size; });
-        }
+      pendingRequestsCountSpan.textContent = `Pending: ${pendingCount}`;
+      pendingWithdrawalsElement.textContent = pendingCount;
+      totalRevenueElement.textContent = `$${totalRevenue.toFixed(2)}`;
+    }
 
-        function loadUsers() {
-            const usersTableBody = document.getElementById('users-table-body');
-            onSnapshot(collection(db, "users"), (snapshot) => {
-                usersTableBody.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const user = doc.data();
-                    const isBlocked = user.isBlocked || false;
-                    const row = `<tr>
-                        <td>${user.name || 'N/A'}</td><td>${user.email}</td><td>${user.balance || 0}</td>
-                        <td><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${isBlocked ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">${isBlocked ? 'Blocked' : 'Active'}</span></td>
-                        <td><button class="btn text-xs ${isBlocked ? 'btn-success' : 'btn-danger'}" onclick="window.toggleBlockUser('${doc.id}', ${isBlocked})">${isBlocked ? 'Unblock' : 'Block'}</button></td>
-                    </tr>`;
-                    usersTableBody.innerHTML += row;
-                });
-            });
-        }
+    // Update dashboard stats
+    function updateDashboardStats() {
+      // Stats are updated in renderUsersTable and renderWithdrawRequestsTable
+      // This function can be used to trigger updates if needed
+    }
 
-        function loadWithdrawals() {
-            const withdrawalsTableBody = document.getElementById('withdrawals-table-body');
-            onSnapshot(query(collection(db, "withdrawals"), where("status", "==", "pending")), (snapshot) => {
-                withdrawalsTableBody.innerHTML = '';
-                snapshot.forEach(docSnap => {
-                    const request = docSnap.data();
-                    const requestedDate = request.requestedAt?.toDate().toLocaleString() || 'N/A';
-                    const row = `<tr>
-                        <td>${request.userName || 'N/A'}</td><td>${request.amount}</td><td>${request.method}</td>
-                        <td>${request.paymentDetail || 'N/A'}</td><td>${requestedDate}</td>
-                        <td class="space-x-2">
-                            <button class="btn btn-success text-xs" onclick="window.handleWithdrawal('${docSnap.id}', 'approved')">Approve</button>
-                            <button class="btn btn-danger text-xs" onclick="window.handleWithdrawal('${docSnap.id}', 'rejected')">Reject</button>
-                        </td>
-                    </tr>`;
-                    withdrawalsTableBody.innerHTML += row;
-                });
-            });
-        }
+    // Update withdrawal request status
+    function updateWithdrawStatus(userId, requestKey, newStatus) {
+      // Extract requestId from key (format: userId_requestId)
+      const parts = requestKey.split('_');
+      const requestId = parts.length > 1 ? parts[1] : requestKey;
+      
+      database.ref('users/' + userId + '/withdrawHistory/' + requestId).update({
+        status: newStatus
+      }).then(() => {
+        showToast(`Withdrawal request status updated to ${newStatus}!`, 'success');
+        // Refresh the table to show updated status
+        renderWithdrawRequestsTable();
+      }).catch((error) => {
+        showToast(`Error updating withdrawal request: ${error.message}`, 'danger');
+      });
+    }
 
-        async function loadSettings() {
-            const configRef = doc(db, "config", "main");
-            const docSnap = await getDoc(configRef);
-            if (docSnap.exists()) {
-                const config = docSnap.data();
-                document.getElementById('min-withdrawal').value = config.minWithdrawal || '';
-                document.getElementById('daily-ad-limit').value = config.dailyAdLimit || '';
-                document.getElementById('coin-value-coins').value = config.coinValueCoins || '';
-                document.getElementById('coin-value-inr').value = config.coinValueInr || '';
-                document.getElementById('payment-methods').value = (config.paymentMethods || []).join(',');
+    // Show toast notification
+    function showToast(message, type = 'info') {
+      toastBody.textContent = message;
+      toastElement.className = `toast align-items-center text-bg-${type} border-0`;
+      toast.show();
+    }
+
+    // Initialize the admin panel
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log("DOM loaded"); // Debug log
+      // Load initial data
+      loadAppConfig();
+      loadUsers();
+      loadWithdrawRequests();
+      
+      // Set up event listeners for section navigation
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          const onclickAttr = this.getAttribute('onclick');
+          if (onclickAttr) {
+            const sectionIdMatch = onclickAttr.match(/'([^']+)'/);
+            if (sectionIdMatch && sectionIdMatch[1]) {
+              const sectionId = sectionIdMatch[1];
+              console.log("Nav link clicked, showing section:", sectionId); // Debug log
+              showSection(sectionId);
             }
-        }
+          }
+        });
+      });
+      
+      // Set up search input listener
+      const userSearch = document.getElementById('user-search');
+      if (userSearch) {
+        userSearch.addEventListener('input', filterUsers);
+      }
+      const userStatusFilter = document.getElementById('user-status-filter');
+      if (userStatusFilter) {
+        userStatusFilter.addEventListener('change', filterUsers);
+      }
+    });
 
-        window.toggleBlockUser = (userId, isBlocked) => {
-            const action = isBlocked ? 'unblock' : 'block';
-            showConfirm(`Kya aap is user ko ${action} karna chahte hain?`, async () => {
-                const userRef = doc(db, "users", userId);
-                try {
-                    await updateDoc(userRef, { isBlocked: !isBlocked });
-                    showAlert(`User safaltapoorvak ${action}ed ho gaya hai.`);
-                } catch (error) { showAlert(`Error: ${error.message}`); }
-            });
-        };
-
-        window.handleWithdrawal = (requestId, newStatus) => {
-            showConfirm(`Kya aap is request ko ${newStatus} karna chahte hain?`, async () => {
-                const requestRef = doc(db, "withdrawals", requestId);
-                try {
-                    if (newStatus === 'rejected') {
-                        const requestSnap = await getDoc(requestRef);
-                        if (requestSnap.exists()) {
-                            const requestData = requestSnap.data();
-                            const userRef = doc(db, "users", requestData.userId);
-                            const userSnap = await getDoc(userRef);
-                            if(userSnap.exists()){
-                               const currentBalance = userSnap.data().balance || 0;
-                               await updateDoc(userRef, { balance: currentBalance + requestData.amount });
-                            }
-                        }
-                    }
-                    await updateDoc(requestRef, { status: newStatus });
-                    showAlert(`Request ${newStatus} ho gayi hai.`);
-                } catch (error) { showAlert(`Error: ${error.message}`); }
-            });
-        };
-
-        async function sendNotification() {
-            const title = document.getElementById('notification-title').value;
-            const message = document.getElementById('notification-message').value;
-            if (!title || !message) return showAlert("Title aur message dono zaroori hain.");
-            try {
-                await addDoc(collection(db, "notifications"), { title, message, createdAt: serverTimestamp() });
-                showAlert("Notification sabhi users ko bhej di gayi hai!");
-                document.getElementById('notification-title').value = '';
-                document.getElementById('notification-message').value = '';
-            } catch (error) { showAlert(`Error: ${error.message}`); }
-        }
-
-        async function saveSettings() {
-            const minWithdrawal = parseInt(document.getElementById('min-withdrawal').value);
-            const dailyAdLimit = parseInt(document.getElementById('daily-ad-limit').value);
-            const coinValueCoins = parseInt(document.getElementById('coin-value-coins').value);
-            const coinValueInr = parseInt(document.getElementById('coin-value-inr').value);
-            const paymentMethods = document.getElementById('payment-methods').value.split(',').map(s => s.trim()).filter(Boolean);
-            if (isNaN(minWithdrawal) || isNaN(dailyAdLimit) || isNaN(coinValueCoins) || isNaN(coinValueInr)) return showAlert("Kripya sabhi number fields mein valid number daalein.");
-            try {
-                await setDoc(doc(db, "config", "main"), { minWithdrawal, dailyAdLimit, coinValueCoins, coinValueInr, paymentMethods }, { merge: true });
-                showAlert("Settings safaltapoorvak save ho gayi hain!");
-            } catch (error) { showAlert(`Settings save karne mein error: ${error.message}`); }
-        }
-        
-        function showAlert(message) {
-            document.getElementById('alert-message').textContent = message;
-            document.getElementById('custom-alert').classList.remove('hidden');
-            document.getElementById('alert-ok-btn').onclick = () => { document.getElementById('custom-alert').classList.add('hidden'); };
-        }
-
-        function showConfirm(message, onConfirm) {
-            const confirmModal = document.getElementById('custom-confirm');
-            const confirmMessage = document.getElementById('confirm-message');
-            const confirmOkBtn = document.getElementById('confirm-ok-btn');
-            const confirmCancelBtn = document.getElementById('confirm-cancel-btn');
-
-            confirmMessage.textContent = message;
-            confirmModal.classList.remove('hidden');
-
-            const okListener = () => {
-                onConfirm();
-                confirmModal.classList.add('hidden');
-                confirmOkBtn.removeEventListener('click', okListener);
-                confirmCancelBtn.removeEventListener('click', cancelListener);
-            };
-
-            const cancelListener = () => {
-                confirmModal.classList.add('hidden');
-                confirmOkBtn.removeEventListener('click', okListener);
-                confirmCancelBtn.removeEventListener('click', cancelListener);
-            };
-
-            confirmOkBtn.addEventListener('click', okListener);
-            confirmCancelBtn.addEventListener('click', cancelListener);
-        }
-    </script>
+    // Make functions available globally for inline event handlers
+    window.showSection = showSection;
+    window.toggleUserStatus = toggleUserStatus;
+    window.updateWithdrawStatus = updateWithdrawStatus;
+    window.filterUsers = filterUsers;
+  </script>
 </body>
 </html>
 ```
