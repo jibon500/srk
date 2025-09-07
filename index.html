@@ -1,624 +1,536 @@
-```html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard - Earning App</title>
-  <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <style>
-    :root {
-      --bs-primary: #0d6efd;
-      --bs-success: #198754;
-      --bs-info: #0dcaf0;
-      --bs-warning: #ffc107;
-      --bs-danger: #dc3545;
-      --bs-dark: #212529;
-      --sidebar-bg: #343a40;
-      --sidebar-color: #fff;
-      --sidebar-hover-bg: #495057;
-      --content-bg: #f8f9fa;
-    }
-    
-    body {
-      background-color: var(--content-bg);
-      font-size: 0.875rem;
-      padding-top: 0; /* Removed header padding */
-    }
-    
-    .sidebar {
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      z-index: 100;
-      padding: 0;
-      box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-      background-color: var(--sidebar-bg);
-      color: var(--sidebar-color);
-      width: 220px;
-    }
-    
-    .sidebar-sticky {
-      position: relative;
-      top: 0;
-      height: 100vh; /* Full height */
-      padding-top: .5rem;
-      overflow-x: hidden;
-      overflow-y: auto;
-    }
-    
-    .sidebar .nav-link {
-      font-weight: 500;
-      color: #adb5bd;
-      padding: 0.5rem 1rem;
-    }
-    
-    .sidebar .nav-link:hover {
-      color: #fff;
-      background-color: var(--sidebar-hover-bg);
-    }
-    
-    .sidebar .nav-link.active {
-      color: #fff;
-      background-color: var(--bs-primary);
-    }
-    
-    .sidebar-heading {
-      font-size: .75rem;
-      text-transform: uppercase;
-      padding: 0.5rem 1rem;
-    }
-    
-    .main-content {
-      margin-left: 220px; /* Same as sidebar width */
-      padding: 15px; /* Reduced padding */
-      width: calc(100% - 220px); /* Adjust width to account for sidebar */
-    }
-    
-    .section-title {
-      border-bottom: 1px solid #dee2e6;
-      padding-bottom: 8px; /* Reduced padding */
-      margin-bottom: 15px; /* Reduced margin */
-    }
-    
-    .stat-card {
-      border-left: 4px solid var(--bs-primary);
-    }
-    
-    .table-responsive {
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    
-    .action-btn {
-      margin: 2px;
-      padding: 4px 8px; /* Reduced padding */
-      font-size: 0.75rem; /* Smaller font */
-    }
-    
-    .status-badge {
-      font-size: 0.75rem;
-    }
-    
-    .user-active { color: #198754; font-weight: bold; }
-    .user-blocked { color: #dc3545; font-weight: bold; }
-    
-    .withdraw-pending { color: #ffc107; font-weight: bold; }
-    .withdraw-processing { color: #17a2b8; font-weight: bold; }
-    .withdraw-success { color: #28a745; font-weight: bold; }
-    .withdraw-rejected { color: #dc3545; font-weight: bold; }
-    
-    .toast-container {
-      z-index: 1050;
-    }
-    
-    .search-box {
-      margin-bottom: 15px;
-    }
-    
-    /* Ensure sidebar is visible on larger screens */
-    @media (min-width: 768px) {
-      .sidebar {
-        display: block !important;
-      }
-    }
-    
-    /* Adjustments for smaller screens */
-    @media (max-width: 767.98px) {
-      .sidebar {
-        width: 100%;
-      }
-      
-      .main-content {
-        margin-left: 0;
-        width: 100%;
-        padding: 10px; /* Even smaller padding on mobile */
-      }
-    }
-    
-    /* Modal styles */
-    .modal-content {
-      border: 1px solid rgba(0,0,0,.2);
-    }
-    
-    .btn-group-xs > .btn, .btn-xs {
-      padding: .25rem .4rem;
-      font-size: .75rem;
-      line-height: 1.5;
-      border-radius: .2rem;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Earning App</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <style>
+        body {
+            padding-top: 60px; /* Space for fixed navbar */
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            position: fixed;
+            top: 56px; /* Height of navbar */
+            bottom: 0;
+            left: 0;
+            z-index: 100; /* Behind the navbar */
+            padding: 0;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+            background-color: #fff;
+        }
+        .sidebar-sticky {
+            position: relative;
+            top: 0;
+            height: calc(100vh - 56px); /* Adjust for navbar height */
+            padding-top: .5rem;
+            overflow-x: hidden;
+            overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+        }
+        .sidebar .nav-link {
+            font-weight: 500;
+            color: #333;
+        }
+        .sidebar .nav-link.active {
+            color: #007bff;
+        }
+        main[role="main"] {
+            padding-top: 20px;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .data-table-container {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .status-badge {
+            font-size: 0.75em;
+        }
+        .action-btn {
+            margin: 2px;
+            padding: 5px 10px;
+            font-size: 0.8em;
+        }
+        .loading-spinner {
+            display: none;
+            margin: 20px auto;
+        }
+        .toast-container {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 1050;
+        }
+        .config-value {
+            font-weight: bold;
+            color: #007bff;
+        }
+        /* --- Update: Larger message history area --- */
+        #reply-message-history {
+            max-height: 60vh; /* Increased max-height for message history */
+            min-height: 300px; /* Ensure a minimum height */
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: var(--bs-body-bg); /* Use Bootstrap's body background */
+            border-radius: 8px;
+            border: 1px solid var(--bs-border-color); /* Use Bootstrap's border color */
+            display: flex; /* ফ্লেক্সবক্স লেআউট */
+            flex-direction: column; /* কলাম অর্ডার */
+        }
+        .message-bubble {
+            padding: 12px 18px; /* Increased padding */
+            border-radius: 20px; /* Increased border-radius */
+            margin-bottom: 12px; /* Increased margin */
+            max-width: 85%; /* Slightly increased max-width */
+            word-wrap: break-word;
+            font-size: 15px; /* Increased font size */
+        }
+        .sent-message {
+            background-color: #007bff; /* Bootstrap primary color */
+            color: white;
+            margin-left: auto; /* Align right */
+        }
+        .received-message {
+            background-color: #e9ecef; /* Bootstrap light color */
+            color: #212529; /* Bootstrap dark color */
+            margin-right: auto; /* Align left */
+        }
+        /* --- End Update --- */
+    </style>
 </head>
 <body>
-  <div class="container-fluid">
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Admin Panel</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="showSection('login-section'); return false;" id="nav-login">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="showSection('dashboard-section'); return false;" id="nav-dashboard" style="display:none;">Dashboard</a>
+                </li>
+            </ul>
+            <span class="navbar-text" id="user-info" style="display:none;">
+                Logged in as: <span id="logged-in-email"></span>
+                <button class="btn btn-outline-light btn-sm ms-2" onclick="logout()">Logout</button>
+            </span>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
     <div class="row">
-      <!-- Sidebar -->
-      <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar">
-        <div class="position-sticky pt-0">
-          <ul class="nav flex-column">
-            <li class="nav-item">
-              <a class="nav-link active" href="#" onclick="showSection('dashboard')">
-                <i class="fas fa-tachometer-alt me-2"></i>
-                Dashboard
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#" onclick="showSection('users')">
-                <i class="fas fa-users me-2"></i>
-                Users
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#" onclick="showSection('withdrawals')">
-                <i class="fas fa-money-bill-wave me-2"></i>
-                Withdrawals
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#" onclick="showSection('settings')">
-                <i class="fas fa-cog me-2"></i>
-                App Settings
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#" onclick="showSection('ad-settings')">
-                <i class="fas fa-ad me-2"></i>
-                Ad Settings
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#" onclick="showSection('messages')">
-                <i class="fas fa-comments me-2"></i>
-                User Messages
-              </a>
-            </li>
-          </ul>
-        </div>
-      </nav>
+        <!-- Sidebar -->
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            <div class="position-sticky pt-3 sidebar-sticky">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('dashboard-section'); return false;" id="sidebar-dashboard">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('config-section'); return false;" id="sidebar-config">
+                            <i class="fas fa-cogs"></i> App Configuration
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('users-section'); return false;" id="sidebar-users">
+                            <i class="fas fa-users"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('withdrawals-section'); return false;" id="sidebar-withdrawals">
+                            <i class="fas fa-money-bill-wave"></i> Withdrawals
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('messages-section'); return false;" id="sidebar-messages">
+                            <i class="fas fa-comments"></i> User Messages
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('notices-section'); return false;" id="sidebar-notices">
+                            <i class="fas fa-bullhorn"></i> Important Notices
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
 
-      <!-- Main Content -->
-      <main class="main-content">
-        <!-- Dashboard Section -->
-        <div id="dashboard-section" class="section-content">
-          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-2 mb-2 border-bottom"> <!-- Reduced padding/margin -->
-            <h1 class="h3">Dashboard</h1> <!-- Smaller heading -->
-          </div>
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4" role="main">
+            <div id="loading-spinner" class="spinner-border text-primary loading-spinner" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
 
-          <!-- Stats Cards -->
-          <div class="row">
-            <div class="col-md-3 mb-2"> <!-- Reduced margin -->
-              <div class="card stat-card h-100">
-                <div class="card-body p-2"> <!-- Reduced padding -->
-                  <h6 class="card-title mb-1">Total Users</h6> <!-- Smaller heading -->
-                  <p class="card-text mb-0" id="total-users" style="font-size: 1.2rem;">0</p> <!-- Smaller font -->
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3 mb-2">
-              <div class="card stat-card h-100">
-                <div class="card-body p-2">
-                  <h6 class="card-title mb-1">Active Users</h6>
-                  <p class="card-text mb-0" id="active-users" style="font-size: 1.2rem;">0</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3 mb-2">
-              <div class="card stat-card h-100">
-                <div class="card-body p-2">
-                  <h6 class="card-title mb-1">Pending Withdrawals</h6>
-                  <p class="card-text mb-0" id="pending-withdrawals" style="font-size: 1.2rem;">0</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3 mb-2">
-              <div class="card stat-card h-100">
-                <div class="card-body p-2">
-                  <h6 class="card-title mb-1">Total Revenue</h6>
-                  <p class="card-text mb-0" id="total-revenue" style="font-size: 1.2rem;">$0.00</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Recent Activity -->
-          <div class="card mt-3"> <!-- Reduced margin -->
-            <div class="card-header p-2"> <!-- Reduced padding -->
-              <h6 class="card-title mb-0">Recent Activity</h6> <!-- Smaller heading -->
-            </div>
-            <div class="card-body p-2"> <!-- Reduced padding -->
-              <div id="recent-activity">
-                <p class="text-muted mb-0" style="font-size: 0.8rem;">No recent activity</p> <!-- Smaller text -->
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Users Section -->
-        <div id="users-section" class="section-content" style="display: none;">
-          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-2 mb-2 border-bottom">
-            <h1 class="h3">User Management</h1>
-          </div>
-
-          <!-- Search and Filter -->
-          <div class="search-box">
-            <div class="row g-2">
-              <div class="col-md-6">
-                <input type="text" id="user-search" class="form-control form-control-sm" placeholder="Search by username or ID..."> <!-- Smaller input -->
-              </div>
-              <div class="col-md-3">
-                <select id="user-status-filter" class="form-control form-control-sm"> <!-- Smaller select -->
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="blocked">Blocked</option>
-                </select>
-              </div>
-              <div class="col-md-3">
-                <button class="btn btn-primary btn-sm w-100" onclick="filterUsers()"> <!-- Smaller button -->
-                  <i class="fas fa-filter me-1"></i>Filter
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Users Table -->
-          <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center p-2"> <!-- Reduced padding -->
-              <h6 class="card-title mb-0">Registered Users</h6> <!-- Smaller heading -->
-              <div>
-                <span class="badge bg-info" id="users-count">Total: 0</span>
-              </div>
-            </div>
-            <div class="card-body p-2"> <!-- Reduced padding -->
-              <div class="table-responsive">
-                <table class="table table-hover table-sm"> <!-- Smaller table -->
-                  <thead class="table-light">
-                    <tr>
-                      <th>ID</th>
-                      <th>Username</th>
-                      <th>Name</th>
-                      <th>Coins</th>
-                      <th>Balance ($)</th>
-                      <th>Referrals</th>
-                      <th>Ref Earn</th>
-                      <th>Status</th>
-                      <th>Created</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="users-table-body">
-                    <!-- User rows will be populated here -->
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Withdrawals Section -->
-        <div id="withdrawals-section" class="section-content" style="display: none;">
-          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-2 mb-2 border-bottom">
-            <h1 class="h3">Withdrawal Management</h1>
-          </div>
-
-          <!-- Withdrawal Requests Table -->
-          <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center p-2">
-              <h6 class="card-title mb-0">Withdrawal Requests</h6>
-              <div>
-                <span class="badge bg-danger" id="pending-requests-count">Pending: 0</span>
-              </div>
-            </div>
-            <div class="card-body p-2">
-              <div class="table-responsive">
-                <table class="table table-hover table-sm">
-                  <thead class="table-light">
-                    <tr>
-                      <th>User</th>
-                      <th>Method</th>
-                      <th>Mobile</th>
-                      <th>Amount ($)</th>
-                      <th>Request Date</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="withdrawals-table-body">
-                    <!-- Withdrawal request rows will be populated here -->
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Settings Section -->
-        <div id="settings-section" class="section-content" style="display: none;">
-          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-2 mb-2 border-bottom">
-            <h1 class="h3">App Settings</h1>
-          </div>
-
-          <!-- App Configuration Card -->
-          <div class="card">
-            <div class="card-header p-2">
-              <h6 class="card-title mb-0">Configuration</h6>
-            </div>
-            <div class="card-body p-2">
-              <div class="row">
-                <div class="col-md-4 mb-2">
-                  <div class="mb-2">
-                    <label for="points-per-ad" class="form-label" style="font-size: 0.8rem;">Points per Ad View</label>
-                    <input type="number" class="form-control form-control-sm" id="points-per-ad" value="10">
-                    <div class="form-text" style="font-size: 0.7rem;">Number of coins earned per ad view</div>
-                  </div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="mb-2">
-                    <label for="coins-for-conversion" class="form-label" style="font-size: 0.8rem;">Coins for Conversion</label>
-                    <input type="number" class="form-control form-control-sm" id="coins-for-conversion" value="1000">
-                    <div class="form-text" style="font-size: 0.7rem;">Number of coins required for conversion</div>
-                  </div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="mb-2">
-                    <label for="value-per-conversion" class="form-label" style="font-size: 0.8rem;">Value per Conversion ($)</label>
-                    <input type="number" step="0.01" class="form-control form-control-sm" id="value-per-conversion" value="0.30">
-                    <div class="form-text" style="font-size: 0.7rem;">USD value for the conversion amount</div>
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-md-4 mb-2">
-                  <div class="mb-2">
-                    <label for="referral-reward" class="form-label" style="font-size: 0.8rem;">Referral Reward (Coins)</label>
-                    <input type="number" class="form-control form-control-sm" id="referral-reward" value="10">
-                    <div class="form-text" style="font-size: 0.7rem;">Coins given to referrer for each new user</div>
-                  </div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="mb-2">
-                    <label for="referral-claim-threshold" class="form-label" style="font-size: 0.8rem;">Referral Claim Threshold</label>
-                    <input type="number" class="form-control form-control-sm" id="referral-claim-threshold" value="200">
-                    <div class="form-text" style="font-size: 0.7rem;">Coins needed to claim referral earnings</div>
-                  </div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="mb-2">
-                    <label for="min-withdraw-amount" class="form-label" style="font-size: 0.8rem;">Minimum Withdraw Amount ($)</label>
-                    <input type="number" step="0.01" class="form-control form-control-sm" id="min-withdraw-amount" value="5.00">
-                    <div class="form-text" style="font-size: 0.7rem;">Minimum amount for withdrawal requests</div>
-                  </div>
-                </div>
-              </div>
-              <button id="save-config-btn" class="btn btn-success btn-sm">
-                <i class="fas fa-save me-1"></i>Save Configuration
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Ad Settings Section -->
-        <div id="ad-settings-section" class="section-content" style="display: none;">
-          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-2 mb-2 border-bottom">
-            <h1 class="h3">Ad Settings</h1>
-          </div>
-
-          <!-- Daily Ad Limit Card -->
-          <div class="card mb-3">
-            <div class="card-header p-2">
-              <h6 class="card-title mb-0">Daily Ad Configuration</h6>
-            </div>
-            <div class="card-body p-2">
-              <div class="row">
-                <div class="col-md-6 mb-2">
-                  <div class="mb-2">
-                    <label for="daily-ad-limit" class="form-label" style="font-size: 0.8rem;">Daily Ad Limit</label>
-                    <input type="number" class="form-control form-control-sm" id="daily-ad-limit" value="10">
-                    <div class="form-text" style="font-size: 0.7rem;">Number of ads each user can view per day</div>
-                  </div>
-                </div>
-                <div class="col-md-6 mb-2">
-                  <div class="mb-2">
-                    <label for="ad-type-duration" class="form-label" style="font-size: 0.8rem;">Ad Type Duration (Hours)</label>
-                    <input type="number" class="form-control form-control-sm" id="ad-type-duration" value="12">
-                    <div class="form-text" style="font-size: 0.7rem;">Duration for which an ad is active (in hours)</div>
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-md-6 mb-2">
-                  <div class="mb-2">
-                    <label for="ad-status" class="form-label" style="font-size: 0.8rem;">Ad System Status</label>
-                    <div class="form-check form-switch">
-                      <input class="form-check-input" type="checkbox" id="ad-status" checked>
-                      <label class="form-check-label" for="ad-status" style="font-size: 0.8rem;">Active</label>
+            <!-- Login Section -->
+            <div id="login-section" class="section active">
+                <div class="d-flex justify-content-center align-items-center" style="height: 80vh;">
+                    <div class="card p-4" style="width: 100%; max-width: 400px;">
+                        <div class="card-body">
+                            <h3 class="card-title text-center mb-4">Admin Login</h3>
+                            <div class="mb-3">
+                                <label for="admin-email" class="form-label">Email address</label>
+                                <input type="email" class="form-control" id="admin-email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="admin-password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="admin-password" required>
+                            </div>
+                            <button class="btn btn-primary w-100" onclick="login()">Login</button>
+                            <div id="login-error" class="text-danger mt-2" style="display: none;"></div>
+                        </div>
                     </div>
-                    <div class="form-text" style="font-size: 0.7rem;">Enable or disable the entire ad system</div>
-                  </div>
                 </div>
-              </div>
-              <button id="save-ad-settings-btn" class="btn btn-success btn-sm">
-                <i class="fas fa-save me-1"></i>Save Ad Settings
-              </button>
             </div>
-          </div>
 
-          <!-- Global Notice Card -->
-          <div class="card">
-            <div class="card-header p-2">
-              <h6 class="card-title mb-0">Global Notice</h6>
+            <!-- Dashboard Section -->
+            <div id="dashboard-section" class="section">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Dashboard</h1>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <div class="card text-white bg-primary">
+                            <div class="card-header">Total Users</div>
+                            <div class="card-body">
+                                <h5 class="card-title" id="total-users-count">0</h5>
+                                <p class="card-text">Registered users</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card text-white bg-success">
+                            <div class="card-header">Total Balance</div>
+                            <div class="card-body">
+                                <h5 class="card-title" id="total-balance-sum">$0.00</h5>
+                                <p class="card-text">Across all users</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card text-white bg-info">
+                            <div class="card-header">Pending Withdrawals</div>
+                            <div class="card-body">
+                                <h5 class="card-title" id="pending-withdrawals-count">0</h5>
+                                <p class="card-text">Requests awaiting action</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                         <h4>Global Configuration</h4>
+                         <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Ad System Status
+                                <span class="config-value" id="dashboard-ad-system-status">Loading...</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Daily Ad Limit Per User
+                                <span class="config-value" id="dashboard-daily-ad-limit">Loading...</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Reset Timer (Hours)
+                                <span class="config-value" id="dashboard-reset-timer-hours">Loading...</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Points Per Ad
+                                <span class="config-value" id="dashboard-points-per-ad">Loading...</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Coins for Conversion
+                                <span class="config-value" id="dashboard-coins-for-conversion">Loading...</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Value Per Conversion ($)
+                                <span class="config-value" id="dashboard-value-per-conversion">Loading...</span>
+                            </li>
+                         </ul>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h4>Recent User Activity</h4>
+                        <ul class="list-group" id="recent-user-activity">
+                            <li class="list-group-item">No recent activity.</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Recent Withdrawal Requests</h4>
+                        <ul class="list-group" id="recent-withdrawal-requests">
+                             <li class="list-group-item">No recent requests.</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-            <div class="card-body p-2">
-              <div class="mb-2">
-                <label for="global-notice" class="form-label" style="font-size: 0.8rem;">Important Notice</label>
-                <textarea class="form-control form-control-sm" id="global-notice" rows="3" placeholder="Enter global notice for all users..."></textarea>
-                <div class="form-text" style="font-size: 0.7rem;">This notice will be displayed to all users in the app</div>
-              </div>
-              <button id="save-notice-btn" class="btn btn-success btn-sm">
-                <i class="fas fa-save me-1"></i>Save Notice
-              </button>
-            </div>
-          </div>
-        </div>
 
-        <!-- User Messages Section -->
-        <div id="messages-section" class="section-content" style="display: none;">
-          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-2 mb-2 border-bottom">
-            <h1 class="h3">User Messages</h1>
-          </div>
+            <!-- App Configuration Section -->
+            <div id="config-section" class="section">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">App Configuration</h1>
+                    <button class="btn btn-success" onclick="saveAppConfig()"><i class="fas fa-save"></i> Save Configuration</button>
+                </div>
+                <form id="app-config-form">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="pointsPerAd" class="form-label">Points Per Ad</label>
+                            <input type="number" class="form-control" id="pointsPerAd" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="coinsForConversion" class="form-label">Coins for Conversion</label>
+                            <input type="number" class="form-control" id="coinsForConversion" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="valuePerConversion" class="form-label">Value Per Conversion ($)</label>
+                            <input type="number" class="form-control" id="valuePerConversion" step="0.01" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="referralRewardCoins" class="form-label">Referral Reward Coins</label>
+                            <input type="number" class="form-control" id="referralRewardCoins" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="referralClaimThreshold" class="form-label">Referral Claim Threshold</label>
+                            <input type="number" class="form-control" id="referralClaimThreshold" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="minWithdrawAmount" class="form-label">Min Withdraw Amount ($)</label>
+                            <input type="number" class="form-control" id="minWithdrawAmount" step="0.01" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="dailyAdLimitPerUser" class="form-label">Daily Ad Limit Per User</label>
+                            <input type="number" class="form-control" id="dailyAdLimitPerUser" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="resetTimerHours" class="form-label">Reset Timer (Hours)</label>
+                            <input type="number" class="form-control" id="resetTimerHours" min="1" required>
+                            <div class="form-text">Number of hours after which the daily ad counter resets for each user.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="isAdSystemActive" class="form-label">Ad System Status</label>
+                            <select class="form-select" id="isAdSystemActive">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
 
-          <!-- Messages Table -->
-          <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center p-2">
-              <h6 class="card-title mb-0">Global Chat Messages</h6>
+            <!-- Users Section -->
+            <div id="users-section" class="section">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Users Management</h1>
+                </div>
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="user-search" placeholder="Search users by ID or name...">
+                </div>
+                <div class="data-table-container">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>User ID</th>
+                                <th>Name</th>
+                                <th>Points</th>
+                                <th>Balance ($)</th>
+                                <th>Referrals</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <!-- Users will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="card-body p-2">
-              <div class="table-responsive">
-                <table class="table table-hover table-sm">
-                  <thead class="table-light">
-                    <tr>
-                      <th>User ID</th>
-                      <th>Username</th>
-                      <th>Message</th>
-                      <th>Date</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="messages-table-body">
-                    <!-- Message rows will be populated here -->
-                  </tbody>
-                </table>
-              </div>
+
+            <!-- Withdrawals Section -->
+            <div id="withdrawals-section" class="section">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Withdrawal Requests</h1>
+                </div>
+                <div class="data-table-container">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>User ID</th>
+                                <th>Amount ($)</th>
+                                <th>Method</th>
+                                <th>Mobile</th>
+                                <th>Timestamp</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="withdrawals-table-body">
+                            <!-- Withdrawals will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
-          </div>
-        </div>
-      </main>
+
+            <!-- User Messages Section -->
+            <div id="messages-section" class="section">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">User Messages</h1>
+                </div>
+                <div class="data-table-container">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>User ID</th>
+                                <th>Latest Message</th>
+                                <th>Timestamp</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="messages-table-body">
+                            <!-- Messages will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Important Notices Section -->
+            <div id="notices-section" class="section">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Important Notices</h1>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#noticeModal" onclick="openNoticeModal('new')"><i class="fas fa-plus"></i> Add New Notice</button>
+                </div>
+                <div class="data-table-container">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Title</th>
+                                <th>Message</th>
+                                <th>Timestamp</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="notices-table-body">
+                            <!-- Notices will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
-  </div>
+</div>
 
-  <!-- User Edit Modal -->
-  <div class="modal fade" id="userEditModal" tabindex="-1" aria-labelledby="userEditModalLabel" aria-hidden="true">
+<!-- Notice Modal -->
+<div class="modal fade" id="noticeModal" tabindex="-1" aria-labelledby="noticeModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="userEditModalLabel">Edit User</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="noticeModalLabel">Add/Edit Notice</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="notice-form">
+                    <input type="hidden" id="notice-key">
+                    <div class="mb-3">
+                        <label for="notice-title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="notice-title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notice-message" class="form-label">Message</label>
+                        <textarea class="form-control" id="notice-message" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveNotice()">Save Notice</button>
+            </div>
         </div>
-        <div class="modal-body">
-          <input type="hidden" id="edit-user-id">
-          <div class="mb-3">
-            <label for="edit-user-coins" class="form-label">Coins</label>
-            <input type="number" class="form-control" id="edit-user-coins">
-          </div>
-          <div class="mb-3">
-            <label for="edit-user-balance" class="form-label">Balance ($)</label>
-            <input type="number" step="0.01" class="form-control" id="edit-user-balance">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary btn-sm" onclick="saveUserEdit()">Save Changes</button>
-        </div>
-      </div>
     </div>
-  </div>
+</div>
 
-  <!-- Edit Status Modal -->
-  <div class="modal fade" id="editStatusModal" tabindex="-1" aria-labelledby="editStatusModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="editStatusModalLabel">Edit Withdrawal Status</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- User Detail Modal -->
+<div class="modal fade" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userDetailModalLabel">User Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="user-detail-content">
+                    <!-- User details will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
-        <div class="modal-body">
-          <p>Current status: <strong id="current-status-display"></strong></p>
-          <p>Select new status:</p>
-          <div class="d-grid gap-2">
-            <button class="btn btn-info" id="processing-btn" onclick="updateWithdrawStatusFromModal('Processing')">
-              <i class="fas fa-spinner"></i> Processing
-            </button>
-            <button class="btn btn-success" id="success-btn" onclick="updateWithdrawStatusFromModal('Success')">
-              <i class="fas fa-check"></i> Success
-            </button>
-            <button class="btn btn-danger" id="rejected-btn" onclick="updateWithdrawStatusFromModal('Rejected')">
-              <i class="fas fa-times"></i> Rejected
-            </button>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-        </div>
-      </div>
     </div>
-  </div>
+</div>
 
-  <!-- Reply Message Modal -->
-  <div class="modal fade" id="replyMessageModal" tabindex="-1" aria-labelledby="replyMessageModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="replyMessageModalLabel">Reply to User</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Message Reply Modal -->
+<div class="modal fade" id="messageReplyModal" tabindex="-1" aria-labelledby="messageReplyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="messageReplyModalLabel">Reply to User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="reply-user-id">
+                <div id="reply-message-history">
+                    <!-- Message history will be populated here -->
+                    <p class="text-center text-muted">Loading messages...</p>
+                </div>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="reply-message-input" placeholder="Type your reply...">
+                    <button class="btn btn-outline-secondary" type="button" id="send-reply-message"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
-        <div class="modal-body">
-          <input type="hidden" id="reply-user-id">
-          <div class="mb-3">
-            <label for="reply-message" class="form-label">Your Reply</label>
-            <textarea class="form-control" id="reply-message" rows="3" placeholder="Enter your reply..."></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary btn-sm" onclick="sendReply()">Send Reply</button>
-        </div>
-      </div>
     </div>
-  </div>
+</div>
 
-  <!-- Toast Container -->
-  <div class="toast-container position-fixed bottom-0 end-0 p-2">
-    <div id="live-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="toast-header">
-        <strong class="me-auto">Notification</strong>
-        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-      <div class="toast-body" id="toast-body">
-        Operation completed successfully.
-      </div>
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto" id="toast-title">Notification</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toast-message">
+            Hello, world! This is a toast message.
+        </div>
     </div>
-  </div>
+</div>
 
-  <!-- Bootstrap JS Bundle with Popper -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-  <script>
-    // Firebase Configuration
+<!-- Bootstrap Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // --- Firebase Configuration (SAME AS USER APP) ---
     const firebaseConfig = {
       apiKey: "AIzaSyD3BGZ0MVLpbQbIpLUAnYvWNEIyk7Y6S0Q",
       authDomain: "earning-app-80258.firebaseapp.com",
@@ -632,600 +544,893 @@
 
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
     const database = firebase.database();
 
-    // DOM Elements
-    const sections = {
-      dashboard: document.getElementById('dashboard-section'),
-      users: document.getElementById('users-section'),
-      withdrawals: document.getElementById('withdrawals-section'),
-      settings: document.getElementById('settings-section'),
-      adSettings: document.getElementById('ad-settings-section'),
-      messages: document.getElementById('messages-section')
-    };
+    // --- State Variables ---
+    let appConfig = {};
+    let usersData = {};
+    let withdrawalsData = {};
+    let noticesData = {};
+    let messagesData = {}; // To store messages for the messages section
+    let currentReplyUserId = null; // To track which user we are replying to in the modal
+    let replyMessagesListener = null; // Listener for real-time updates in the reply modal
 
-    const usersTableBody = document.getElementById('users-table-body');
-    const withdrawalsTableBody = document.getElementById('withdrawals-table-body');
-    const messagesTableBody = document.getElementById('messages-table-body');
-    const usersCountSpan = document.getElementById('users-count');
-    const pendingRequestsCountSpan = document.getElementById('pending-requests-count');
-    const totalUsersElement = document.getElementById('total-users');
-    const activeUsersElement = document.getElementById('active-users');
-    const pendingWithdrawalsElement = document.getElementById('pending-withdrawals');
-    const totalRevenueElement = document.getElementById('total-revenue');
-    const saveConfigBtn = document.getElementById('save-config-btn');
-    const saveAdSettingsBtn = document.getElementById('save-ad-settings-btn');
-    const saveNoticeBtn = document.getElementById('save-notice-btn');
-    const toastElement = document.getElementById('live-toast');
-    const toast = new bootstrap.Toast(toastElement);
-    const toastBody = document.getElementById('toast-body');
+    // --- DOM Elements ---
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const toastEl = document.getElementById('liveToast');
+    const toast = new bootstrap.Toast(toastEl);
 
-    // State variables
-    let allUsers = {};
-    let allWithdrawRequests = {};
-    let allMessages = {};
-    let currentUserEditId = null;
-    let currentEditUserId = null;
-    let currentEditRequestKey = null;
-    let currentEditStatus = null;
-    let currentReplyUserId = null;
+    // --- Utility Functions ---
+    function showToast(title, message, isError = false) {
+        document.getElementById('toast-title').textContent = title;
+        document.getElementById('toast-message').textContent = message;
+        toastEl.classList.toggle('bg-danger', isError);
+        toastEl.classList.toggle('text-white', isError);
+        toast.show();
+    }
 
-    // Show section function
     function showSection(sectionId) {
-      console.log("Showing section:", sectionId); // Debug log
-      // Hide all sections
-      Object.values(sections).forEach(section => {
-        section.style.display = 'none';
-      });
-      
-      // Show selected section
-      if (sections[sectionId]) {
-        sections[sectionId].style.display = 'block';
-      }
-      
-      // Update active nav link
-      document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-      });
-      const activeLink = document.querySelector(`.nav-link[onclick="showSection('${sectionId}')"]`);
-      if (activeLink) {
-        activeLink.classList.add('active');
-      }
-      
-      // Load data for the section if needed
-      if (sectionId === 'users') {
-        loadUsers();
-      } else if (sectionId === 'withdrawals') {
-        loadWithdrawRequests();
-      } else if (sectionId === 'settings') {
-        loadAppConfig();
-      } else if (sectionId === 'ad-settings') {
-        loadAdSettings();
-      } else if (sectionId === 'messages') {
-        loadUserMessages();
-      } else if (sectionId === 'dashboard') {
-        // Dashboard stats are updated by other sections
-        updateDashboardStats();
-      }
-    }
-
-    // Load app configuration
-    function loadAppConfig() {
-      database.ref('appConfig').once('value').then((snapshot) => {
-        const config = snapshot.val();
-        if (config) {
-          document.getElementById('points-per-ad').value = config.pointsPerAd || 10;
-          document.getElementById('coins-for-conversion').value = config.coinsForConversion || 1000;
-          document.getElementById('value-per-conversion').value = config.valuePerConversion || 0.30;
-          document.getElementById('referral-reward').value = config.referralReward || 10;
-          document.getElementById('referral-claim-threshold').value = config.referralClaimThreshold || 200;
-          document.getElementById('min-withdraw-amount').value = config.minWithdrawAmount || 5.00;
-        }
-      }).catch((error) => {
-        showToast(`Error loading config: ${error.message}`, 'danger');
-      });
-    }
-
-    // Save app configuration
-    saveConfigBtn.addEventListener('click', () => {
-      const pointsPerAd = parseInt(document.getElementById('points-per-ad').value);
-      const coinsForConversion = parseInt(document.getElementById('coins-for-conversion').value);
-      const valuePerConversion = parseFloat(document.getElementById('value-per-conversion').value);
-      const referralReward = parseInt(document.getElementById('referral-reward').value);
-      const referralClaimThreshold = parseInt(document.getElementById('referral-claim-threshold').value);
-      const minWithdrawAmount = parseFloat(document.getElementById('min-withdraw-amount').value);
-
-      if (isNaN(pointsPerAd) || isNaN(coinsForConversion) || isNaN(valuePerConversion) ||
-          isNaN(referralReward) || isNaN(referralClaimThreshold) || isNaN(minWithdrawAmount)) {
-        showToast('Please enter valid numbers for all configuration fields.', 'warning');
-        return;
-      }
-
-      database.ref('appConfig').set({
-        pointsPerAd: pointsPerAd,
-        coinsForConversion: coinsForConversion,
-        valuePerConversion: valuePerConversion,
-        referralReward: referralReward,
-        referralClaimThreshold: referralClaimThreshold,
-        minWithdrawAmount: minWithdrawAmount
-      }).then(() => {
-        showToast('Configuration saved successfully!', 'success');
-      }).catch((error) => {
-        showToast(`Error saving config: ${error.message}`, 'danger');
-      });
-    });
-
-    // Load ad settings
-    function loadAdSettings() {
-      database.ref('adSettings').once('value').then((snapshot) => {
-        const settings = snapshot.val();
-        if (settings) {
-          document.getElementById('daily-ad-limit').value = settings.dailyAdLimit || 10;
-          document.getElementById('ad-type-duration').value = settings.adTypeDuration || 12;
-          document.getElementById('ad-status').checked = settings.adStatus !== false; // Default to true if not set
-        }
-      }).catch((error) => {
-        showToast(`Error loading ad settings: ${error.message}`, 'danger');
-      });
-
-      database.ref('globalNotice').once('value').then((snapshot) => {
-        const notice = snapshot.val();
-        if (notice) {
-          document.getElementById('global-notice').value = notice;
-        }
-      }).catch((error) => {
-        showToast(`Error loading global notice: ${error.message}`, 'danger');
-      });
-    }
-
-    // Save ad settings
-    saveAdSettingsBtn.addEventListener('click', () => {
-      const dailyAdLimit = parseInt(document.getElementById('daily-ad-limit').value);
-      const adTypeDuration = parseInt(document.getElementById('ad-type-duration').value);
-      const adStatus = document.getElementById('ad-status').checked;
-
-      if (isNaN(dailyAdLimit) || isNaN(adTypeDuration)) {
-        showToast('Please enter valid numbers for ad settings.', 'warning');
-        return;
-      }
-
-      database.ref('adSettings').set({
-        dailyAdLimit: dailyAdLimit,
-        adTypeDuration: adTypeDuration,
-        adStatus: adStatus
-      }).then(() => {
-        showToast('Ad settings saved successfully!', 'success');
-      }).catch((error) => {
-        showToast(`Error saving ad settings: ${error.message}`, 'danger');
-      });
-    });
-
-    // Save global notice
-    saveNoticeBtn.addEventListener('click', () => {
-      const globalNotice = document.getElementById('global-notice').value;
-
-      database.ref('globalNotice').set(globalNotice).then(() => {
-        showToast('Global notice saved successfully!', 'success');
-      }).catch((error) => {
-        showToast(`Error saving global notice: ${error.message}`, 'danger');
-      });
-    });
-
-    // Load users and set up real-time listener
-    function loadUsers() {
-      database.ref('users').on('value', (snapshot) => {
-        allUsers = snapshot.val() || {};
-        renderUsersTable();
-        updateDashboardStats();
-      }, (error) => {
-        showToast(`Error loading users: ${error.message}`, 'danger');
-      });
-    }
-
-    // Filter users based on search and status
-    function filterUsers() {
-      renderUsersTable();
-    }
-
-    // Render users table
-    function renderUsersTable() {
-      usersTableBody.innerHTML = '';
-      let userCount = 0;
-      let activeUserCount = 0;
-      
-      const searchTerm = document.getElementById('user-search').value.toLowerCase();
-      const statusFilter = document.getElementById('user-status-filter').value;
-
-      Object.keys(allUsers).forEach(userId => {
-        const user = allUsers[userId];
-        
-        // Apply search filter
-        if (searchTerm && 
-            !userId.toLowerCase().includes(searchTerm) && 
-            !(user.username && user.username.toLowerCase().includes(searchTerm)) &&
-            !(user.firstName && user.firstName.toLowerCase().includes(searchTerm))) {
-          return; // Skip this user
+        // Hide all sections
+        document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+        // Show the requested section
+        if (sectionId) {
+            document.getElementById(sectionId).classList.add('active');
         }
         
-        // Apply status filter
-        if (statusFilter !== 'all') {
-          const isBlocked = user.isBlocked || false;
-          if ((statusFilter === 'active' && isBlocked) || 
-              (statusFilter === 'blocked' && !isBlocked)) {
-            return; // Skip this user
-          }
+        // Specific actions for sections
+        if (sectionId === 'config-section') {
+            loadAppConfigForEdit();
+        } else if (sectionId === 'users-section') {
+            loadUsers();
+        } else if (sectionId === 'withdrawals-section') {
+            loadWithdrawals();
+        } else if (sectionId === 'messages-section') {
+            loadUserMessages();
+        } else if (sectionId === 'notices-section') {
+            loadNotices();
+        } else if (sectionId === 'dashboard-section') {
+             updateDashboardStats();
         }
-        
-        userCount++;
-        if (!user.isBlocked) activeUserCount++;
-        
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${userId.substring(0, 6)}...</td>
-          <td>${user.username || 'N/A'}</td>
-          <td>${user.firstName || 'N/A'}</td>
-          <td>${user.points || 0}</td>
-          <td>$${(user.balance || 0).toFixed(2)}</td>
-          <td>${user.referralCount || 0}</td>
-          <td>${user.referralEarnings || 0}</td>
-          <td>
-            <span class="${user.isBlocked ? 'user-blocked' : 'user-active'}">
-              <i class="fas fa-${user.isBlocked ? 'times-circle' : 'check-circle'}"></i>
-              ${user.isBlocked ? 'Blocked' : 'Active'}
-            </span>
-          </td>
-          <td>${new Date(user.createdAt).toLocaleDateString()}</td>
-          <td>
-            <button class="btn btn-sm btn-${user.isBlocked ? 'success' : 'warning'} action-btn" 
-                    onclick="toggleUserStatus('${userId}', ${!user.isBlocked})">
-              <i class="fas fa-${user.isBlocked ? 'unlock' : 'ban'}"></i>
-              ${user.isBlocked ? 'Unblock' : 'Block'}
-            </button>
-            <button class="btn btn-sm btn-info action-btn ms-1" 
-                    onclick="openUserEditModal('${userId}')">
-              <i class="fas fa-edit"></i> Edit
-            </button>
-          </td>
-        `;
-        usersTableBody.appendChild(row);
-      });
-
-      usersCountSpan.textContent = `Total: ${userCount}`;
-      totalUsersElement.textContent = userCount;
-      activeUsersElement.textContent = activeUserCount;
     }
 
-    // Toggle user block status
-    function toggleUserStatus(userId, shouldBeBlocked) {
-      database.ref('users/' + userId).update({
-        isBlocked: shouldBeBlocked
-      }).then(() => {
-        showToast(`User ${shouldBeBlocked ? 'blocked' : 'unblocked'} successfully!`, 'success');
-        // Refresh the table to show updated status
-        renderUsersTable();
-      }).catch((error) => {
-        showToast(`Error updating user: ${error.message}`, 'danger');
-      });
-    }
-
-    // Open user edit modal
-    function openUserEditModal(userId) {
-      const user = allUsers[userId];
-      if (!user) return;
-      
-      currentUserEditId = userId;
-      document.getElementById('edit-user-id').value = userId;
-      document.getElementById('edit-user-coins').value = user.points || 0;
-      document.getElementById('edit-user-balance').value = (user.balance || 0).toFixed(2);
-      
-      const modal = new bootstrap.Modal(document.getElementById('userEditModal'));
-      modal.show();
-    }
-
-    // Save user edit
-    function saveUserEdit() {
-      if (!currentUserEditId) return;
-      
-      const coins = parseInt(document.getElementById('edit-user-coins').value);
-      const balance = parseFloat(document.getElementById('edit-user-balance').value);
-      
-      if (isNaN(coins) || isNaN(balance)) {
-        showToast('Please enter valid numbers for coins and balance.', 'warning');
-        return;
-      }
-      
-      database.ref('users/' + currentUserEditId).update({
-        points: coins,
-        balance: balance
-      }).then(() => {
-        showToast('User data updated successfully!', 'success');
-        const modal = bootstrap.Modal.getInstance(document.getElementById('userEditModal'));
-        modal.hide();
-        // Refresh the table to show updated data
-        renderUsersTable();
-      }).catch((error) => {
-        showToast(`Error updating user data: ${error.message}`, 'danger');
-      });
-    }
-
-    // Load withdrawal requests and set up real-time listener
-    function loadWithdrawRequests() {
-      database.ref('users').on('value', (snapshot) => {
-        const users = snapshot.val() || {};
-        allWithdrawRequests = {};
-        
-        // Collect all withdrawal requests
-        Object.keys(users).forEach(userId => {
-          const user = users[userId];
-          if (user.withdrawHistory) {
-            Object.keys(user.withdrawHistory).forEach(requestId => {
-              const request = user.withdrawHistory[requestId];
-              allWithdrawRequests[`${userId}_${requestId}`] = {
-                ...request,
-                userId: userId,
-                username: user.username || user.firstName || 'Unknown'
-              };
-            });
-          }
-        });
-        
-        renderWithdrawRequestsTable();
-        updateDashboardStats();
-      }, (error) => {
-        showToast(`Error loading withdrawal requests: ${error.message}`, 'danger');
-      });
-    }
-
-    // Render withdrawal requests table with new logic
-    function renderWithdrawRequestsTable() {
-      withdrawalsTableBody.innerHTML = '';
-      let pendingCount = 0;
-      let totalRevenue = 0;
-
-      // Convert to array and sort by timestamp (newest first)
-      const requestsArray = Object.values(allWithdrawRequests);
-      requestsArray.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-      requestsArray.forEach(request => {
-        if (request.status === 'Pending') pendingCount++;
-        if (request.status === 'Success') totalRevenue += parseFloat(request.amount);
-        
-        const statusClass = `withdraw-${request.status.toLowerCase()}`;
-        const row = document.createElement('tr');
-        
-        // Determine which buttons to show based on current status
-        let actionButtons = '';
-        if (request.status === 'Pending') {
-          // Show only Process button for Pending requests
-          actionButtons = `
-            <button class="btn btn-sm btn-info action-btn" 
-                    onclick="updateWithdrawStatus('${request.userId}', '${Object.keys(allWithdrawRequests).find(key => allWithdrawRequests[key] === request)}', 'Processing')">
-              <i class="fas fa-spinner"></i> Process
-            </button>
-          `;
+    function showLoading(show = true) {
+        if (show) {
+            loadingSpinner.style.display = 'block';
         } else {
-          // For Processing, Success, or Rejected, show Edit button
-          actionButtons = `
-            <button class="btn btn-sm btn-secondary action-btn" 
-                    onclick="openEditStatusModal('${request.userId}', '${Object.keys(allWithdrawRequests).find(key => allWithdrawRequests[key] === request)}', '${request.status}')">
-              <i class="fas fa-edit"></i> Edit
-            </button>
-          `;
+            loadingSpinner.style.display = 'none';
         }
-        
-        row.innerHTML = `
-          <td>${request.username} (${request.userId.substring(0, 6)}...)</td>
-          <td>${request.method}</td>
-          <td>${request.mobileNumber}</td>
-          <td>$${parseFloat(request.amount).toFixed(2)}</td>
-          <td>${new Date(request.timestamp).toLocaleString()}</td>
-          <td class="${statusClass}">${request.status}</td>
-          <td>
-            ${actionButtons}
-          </td>
-        `;
-        withdrawalsTableBody.appendChild(row);
-      });
-
-      pendingRequestsCountSpan.textContent = `Pending: ${pendingCount}`;
-      pendingWithdrawalsElement.textContent = pendingCount;
-      totalRevenueElement.textContent = `$${totalRevenue.toFixed(2)}`;
     }
 
-    // Open edit status modal
-    function openEditStatusModal(userId, requestKey, currentStatus) {
-      // Store current request info
-      currentEditUserId = userId;
-      currentEditRequestKey = requestKey;
-      currentEditStatus = currentStatus;
-      
-      // Update modal content
-      document.getElementById('current-status-display').textContent = currentStatus;
-      
-      // Disable current status button
-      document.getElementById('processing-btn').disabled = (currentStatus === 'Processing');
-      document.getElementById('success-btn').disabled = (currentStatus === 'Success');
-      document.getElementById('rejected-btn').disabled = (currentStatus === 'Rejected');
-      
-      // Show modal
-      const modal = new bootstrap.Modal(document.getElementById('editStatusModal'));
-      modal.show();
-    }
+    // --- Authentication ---
+    function login() {
+        const email = document.getElementById('admin-email').value;
+        const password = document.getElementById('admin-password').value;
+        const errorDiv = document.getElementById('login-error');
+        errorDiv.style.display = 'none';
 
-    // Update withdrawal request status from modal
-    function updateWithdrawStatusFromModal(newStatus) {
-      updateWithdrawStatus(currentEditUserId, currentEditRequestKey, newStatus);
-      
-      // Hide modal
-      const modal = bootstrap.Modal.getInstance(document.getElementById('editStatusModal'));
-      modal.hide();
-    }
+        if (!email || !password) {
+            errorDiv.textContent = 'Please enter email and password.';
+            errorDiv.style.display = 'block';
+            return;
+        }
 
-    // Update dashboard stats
-    function updateDashboardStats() {
-      // Stats are updated in renderUsersTable and renderWithdrawRequestsTable
-      // This function can be used to trigger updates if needed
-    }
-
-    // Update withdrawal request status
-    function updateWithdrawStatus(userId, requestKey, newStatus) {
-      // Extract requestId from key (format: userId_requestId)
-      const parts = requestKey.split('_');
-      const requestId = parts.length > 1 ? parts[1] : requestKey;
-      
-      database.ref('users/' + userId + '/withdrawHistory/' + requestId).update({
-        status: newStatus
-      }).then(() => {
-        showToast(`Withdrawal request status updated to ${newStatus}!`, 'success');
-        // Refresh the table to show updated status
-        renderWithdrawRequestsTable();
-      }).catch((error) => {
-        showToast(`Error updating withdrawal request: ${error.message}`, 'danger');
-      });
-    }
-
-    // Load user messages
-    function loadUserMessages() {
-      database.ref('users').on('value', (snapshot) => {
-        const users = snapshot.val() || {};
-        allMessages = {};
-        
-        // Collect all chat messages
-        Object.keys(users).forEach(userId => {
-          const user = users[userId];
-          if (user.chatHistory) {
-            Object.keys(user.chatHistory).forEach(messageId => {
-              const message = user.chatHistory[messageId];
-              allMessages[`${userId}_${messageId}`] = {
-                ...message,
-                userId: userId,
-                username: user.username || user.firstName || 'Unknown'
-              };
+        auth.signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                // Signed in
+                const user = userCredential.user;
+                console.log("Admin logged in:", user.email);
+                // Now check if UID exists in database admins list
+                return database.ref('admins/' + user.uid).once('value');
+            })
+            .then((snapshot) => {
+                if (snapshot.exists()) {
+                    // UID exists in admins list, proceed to dashboard
+                    document.getElementById('logged-in-email').textContent = auth.currentUser.email;
+                    document.getElementById('user-info').style.display = 'block';
+                    document.getElementById('nav-dashboard').style.display = 'block';
+                    document.getElementById('sidebarMenu').style.display = 'block'; // Show sidebar
+                    showSection('dashboard-section');
+                    initializeApp();
+                } else {
+                    // UID does not exist in admins list, logout and show error
+                    return auth.signOut().then(() => {
+                        throw new Error('Unauthorized access. UID not found in admins list.');
+                    });
+                }
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.error("Login error:", errorCode, errorMessage);
+                // Handle specific errors
+                if (errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password') {
+                    errorDiv.textContent = 'Invalid email or password.';
+                } else if (errorMessage.includes('Unauthorized access')) {
+                    errorDiv.textContent = 'Access denied. You are not authorized as an admin.';
+                } else {
+                    errorDiv.textContent = errorMessage;
+                }
+                errorDiv.style.display = 'block';
             });
-          }
+    }
+
+    function logout() {
+        auth.signOut().then(() => {
+            console.log("Admin logged out");
+            // Redirect to login section
+            showSection('login-section');
+             // Hide navbar links for logged-in sections
+            document.getElementById('nav-dashboard').style.display = 'none';
+            document.getElementById('user-info').style.display = 'none';
+            // Hide sidebar
+            document.getElementById('sidebarMenu').style.display = 'none';
+        }).catch((error) => {
+            console.error("Logout error:", error);
+            showToast('Error', 'Failed to logout.', true);
         });
-        
-        renderMessagesTable();
-      }, (error) => {
-        showToast(`Error loading user messages: ${error.message}`, 'danger');
-      });
     }
 
-    // Render messages table
-    function renderMessagesTable() {
-      messagesTableBody.innerHTML = '';
-      
-      // Convert to array and sort by timestamp (newest first)
-      const messagesArray = Object.values(allMessages);
-      messagesArray.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-      messagesArray.forEach(message => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${message.userId.substring(0, 6)}...</td>
-          <td>${message.username}</td>
-          <td>${message.message}</td>
-          <td>${new Date(message.timestamp).toLocaleString()}</td>
-          <td>
-            <button class="btn btn-sm btn-primary action-btn" 
-                    onclick="openReplyModal('${message.userId}')">
-              <i class="fas fa-reply"></i> Reply
-            </button>
-          </td>
-        `;
-        messagesTableBody.appendChild(row);
-      });
+    // --- App Initialization ---
+    async function initializeApp() {
+        showLoading(true);
+        try {
+            await loadAppConfig(); // Load config first
+            await Promise.all([loadUsers(), loadWithdrawals(), loadNotices()]);
+            // loadUserMessages is called when the 'messages-section' is shown
+        } catch (error) {
+            console.error("Failed to initialize admin panel:", error);
+            showToast('Error', 'Failed to initialize admin panel. Please check the console for details.', true);
+        } finally {
+            showLoading(false);
+        }
     }
 
-    // Open reply modal
-    function openReplyModal(userId) {
-      currentReplyUserId = userId;
-      document.getElementById('reply-user-id').value = userId;
-      document.getElementById('reply-message').value = '';
-      
-      const modal = new bootstrap.Modal(document.getElementById('replyMessageModal'));
-      modal.show();
-    }
-
-    // Send reply to user
-    function sendReply() {
-      if (!currentReplyUserId) return;
-      
-      const replyMessage = document.getElementById('reply-message').value.trim();
-      if (!replyMessage) {
-        showToast('Please enter a reply message.', 'warning');
-        return;
-      }
-      
-      // Create a new message in the user's inbox
-      const newMessageRef = database.ref('users/' + currentReplyUserId + '/inbox').push();
-      newMessageRef.set({
-        message: replyMessage,
-        timestamp: new Date().toISOString(),
-        fromAdmin: true
-      }).then(() => {
-        showToast('Reply sent successfully!', 'success');
-        const modal = bootstrap.Modal.getInstance(document.getElementById('replyMessageModal'));
-        modal.hide();
-      }).catch((error) => {
-        showToast(`Error sending reply: ${error.message}`, 'danger');
-      });
-    }
-
-    // Show toast notification
-    function showToast(message, type = 'info') {
-      toastBody.textContent = message;
-      toastElement.className = `toast align-items-center text-bg-${type} border-0`;
-      toast.show();
-    }
-
-    // Initialize the admin panel
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log("DOM loaded"); // Debug log
-      // Load initial data
-      loadAppConfig();
-      loadUsers();
-      loadWithdrawRequests();
-      
-      // Set up event listeners for section navigation
-      document.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', function(e) {
-          e.preventDefault();
-          const onclickAttr = this.getAttribute('onclick');
-          if (onclickAttr) {
-            const sectionIdMatch = onclickAttr.match(/'([^']+)'/);
-            if (sectionIdMatch && sectionIdMatch[1]) {
-              const sectionId = sectionIdMatch[1];
-              console.log("Nav link clicked, showing section:", sectionId); // Debug log
-              showSection(sectionId);
+    // --- Firebase Data Loading ---
+    async function loadAppConfig() {
+        try {
+            const snapshot = await database.ref('appConfig').once('value');
+            const config = snapshot.val();
+            if (config) {
+                // Ensure resetTimerHours has a default value if not set
+                appConfig = {
+                    ...config,
+                    resetTimerHours: config.resetTimerHours || 12 // Default to 12 hours
+                };
+                console.log("App config loaded:", appConfig);
+                updateDashboardStats(); // Update dashboard when config loads
+            } else {
+                 // If no config exists, initialize with defaults including resetTimerHours
+                 appConfig = {
+                    pointsPerAd: 10,
+                    coinsForConversion: 1000,
+                    valuePerConversion: 0.30,
+                    referralRewardCoins: 10,
+                    referralClaimThreshold: 200,
+                    minWithdrawAmount: 5,
+                    dailyAdLimitPerUser: 10,
+                    isAdSystemActive: true,
+                    resetTimerHours: 12 // Default reset timer
+                 };
+                 console.log("App config initialized with defaults:", appConfig);
+                 updateDashboardStats();
             }
-          }
+        } catch (error) {
+            console.error("Failed to load app config:", error);
+            showToast('Error', 'Failed to load app configuration.', true);
+        }
+    }
+
+    async function loadUsers() {
+        showLoading(true);
+        try {
+            const snapshot = await database.ref('users').once('value');
+            usersData = snapshot.val() || {};
+            renderUsersTable();
+            updateDashboardStats(); // Update dashboard when users load
+        } catch (error) {
+            console.error("Failed to load users:", error);
+            showToast('Error', 'Failed to load users data.', true);
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function loadWithdrawals() {
+        showLoading(true);
+        try {
+            // This loads all withdrawals from all users
+            const snapshot = await database.ref('users').once('value');
+            const users = snapshot.val() || {};
+            withdrawalsData = {};
+            for (const userId in users) {
+                if (users[userId].withdrawHistory) {
+                    for (const requestId in users[userId].withdrawHistory) {
+                        // Add userId to the request data for easier handling
+                        withdrawalsData[`${userId}/${requestId}`] = {
+                            ...users[userId].withdrawHistory[requestId],
+                            userId: userId,
+                            requestId: requestId
+                        };
+                    }
+                }
+            }
+            renderWithdrawalsTable();
+            updateDashboardStats(); // Update dashboard when withdrawals load
+        } catch (error) {
+            console.error("Failed to load withdrawals:", error);
+            showToast('Error', 'Failed to load withdrawal requests.', true);
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function loadNotices() {
+        showLoading(true);
+        try {
+            const snapshot = await database.ref('notices').once('value');
+            noticesData = snapshot.val() || {};
+            renderNoticesTable();
+        } catch (error) {
+            console.error("Failed to load notices:", error);
+            showToast('Error', 'Failed to load notices.', true);
+        } finally {
+            showLoading(false);
+        }
+    }
+
+     async function loadUserMessages() {
+        showLoading(true);
+        try {
+            // Load all users first to get their names/IDs
+            await loadUsers(); // Ensure usersData is populated
+
+            // This loads messages from all users
+            const snapshot = await database.ref('users').once('value');
+            const users = snapshot.val() || {};
+            messagesData = {};
+
+            for (const userId in users) {
+                if (users[userId].adminMessages) {
+                    // Get the latest message for this user
+                    const userMessages = Object.values(users[userId].adminMessages);
+                    if (userMessages.length > 0) {
+                        // Sort by timestamp descending to get the latest
+                        userMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                        const latestMessage = userMessages[0];
+                        messagesData[userId] = {
+                            userId: userId,
+                            latestMessage: latestMessage,
+                            // We can also store all messages if needed for the modal
+                            allMessages: users[userId].adminMessages
+                        };
+                    }
+                }
+            }
+            renderMessagesTable();
+        } catch (error) {
+            console.error("Failed to load user messages:", error);
+            showToast('Error', 'Failed to load user messages.', true);
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    // --- Dashboard Updates ---
+    function updateDashboardStats() {
+        // Total Users
+        const totalUsers = Object.keys(usersData).length;
+        document.getElementById('total-users-count').textContent = totalUsers;
+
+        // Total Balance
+        let totalBalance = 0;
+        for (const userId in usersData) {
+            totalBalance += usersData[userId].balance || 0;
+        }
+        document.getElementById('total-balance-sum').textContent = `$${totalBalance.toFixed(2)}`;
+
+        // Pending Withdrawals
+        let pendingCount = 0;
+        for (const key in withdrawalsData) {
+            if (withdrawalsData[key].status === 'Pending') {
+                pendingCount++;
+            }
+        }
+        document.getElementById('pending-withdrawals-count').textContent = pendingCount;
+
+        // Global Config on Dashboard
+        document.getElementById('dashboard-ad-system-status').textContent = appConfig.isAdSystemActive !== undefined ? (appConfig.isAdSystemActive ? 'Active' : 'Inactive') : 'N/A';
+        document.getElementById('dashboard-daily-ad-limit').textContent = appConfig.dailyAdLimitPerUser !== undefined ? appConfig.dailyAdLimitPerUser : 'N/A';
+        document.getElementById('dashboard-reset-timer-hours').textContent = appConfig.resetTimerHours !== undefined ? appConfig.resetTimerHours : 'N/A';
+        document.getElementById('dashboard-points-per-ad').textContent = appConfig.pointsPerAd !== undefined ? appConfig.pointsPerAd : 'N/A';
+        document.getElementById('dashboard-coins-for-conversion').textContent = appConfig.coinsForConversion !== undefined ? appConfig.coinsForConversion : 'N/A';
+        document.getElementById('dashboard-value-per-conversion').textContent = appConfig.valuePerConversion !== undefined ? `$${appConfig.valuePerConversion.toFixed(2)}` : 'N/A';
+
+        // Recent User Activity (simplified)
+        const recentActivityList = document.getElementById('recent-user-activity');
+        recentActivityList.innerHTML = '';
+        const sortedUsers = Object.values(usersData).sort((a, b) => new Date(b.lastAdWatchTime || 0) - new Date(a.lastAdWatchTime || 0));
+        const recentUsers = sortedUsers.slice(0, 5);
+        if (recentUsers.length === 0) {
+            recentActivityList.innerHTML = '<li class="list-group-item">No recent activity.</li>';
+        } else {
+            recentUsers.forEach(user => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = `${user.firstName || user.username || 'Unknown'} (ID: ${user.id}) watched an ad.`;
+                if(user.lastAdWatchTime) {
+                    li.innerHTML += `<br><small class="text-muted">${new Date(user.lastAdWatchTime).toLocaleString()}</small>`;
+                }
+                recentActivityList.appendChild(li);
+            });
+        }
+
+        // Recent Withdrawal Requests
+        const recentWithdrawalsList = document.getElementById('recent-withdrawal-requests');
+        recentWithdrawalsList.innerHTML = '';
+        const sortedWithdrawals = Object.values(withdrawalsData).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const recentWithdrawals = sortedWithdrawals.slice(0, 5);
+        if (recentWithdrawals.length === 0) {
+            recentWithdrawalsList.innerHTML = '<li class="list-group-item">No recent requests.</li>';
+        } else {
+            recentWithdrawals.forEach(req => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.innerHTML = `
+                    <strong>User ${req.userId}</strong> requested $${parseFloat(req.amount).toFixed(2)}<br>
+                    <span class="badge bg-${req.status === 'Pending' ? 'warning' : req.status === 'Success' ? 'success' : req.status === 'Rejected' ? 'danger' : 'info'}">${req.status}</span>
+                    <br><small class="text-muted">${new Date(req.timestamp).toLocaleString()}</small>
+                `;
+                recentWithdrawalsList.appendChild(li);
+            });
+        }
+    }
+
+    // --- App Configuration Management ---
+    function loadAppConfigForEdit() {
+        document.getElementById('pointsPerAd').value = appConfig.pointsPerAd || '';
+        document.getElementById('coinsForConversion').value = appConfig.coinsForConversion || '';
+        document.getElementById('valuePerConversion').value = appConfig.valuePerConversion || '';
+        document.getElementById('referralRewardCoins').value = appConfig.referralRewardCoins || '';
+        document.getElementById('referralClaimThreshold').value = appConfig.referralClaimThreshold || '';
+        document.getElementById('minWithdrawAmount').value = appConfig.minWithdrawAmount || '';
+        document.getElementById('dailyAdLimitPerUser').value = appConfig.dailyAdLimitPerUser || '';
+        document.getElementById('resetTimerHours').value = appConfig.resetTimerHours || '12'; // Default to 12 if not set
+        document.getElementById('isAdSystemActive').value = appConfig.isAdSystemActive !== undefined ? appConfig.isAdSystemActive.toString() : 'true';
+    }
+
+    async function saveAppConfig() {
+        const formData = new FormData(document.getElementById('app-config-form'));
+        const newConfig = {};
+        for (const [key, value] of formData.entries()) {
+            if (key === 'isAdSystemActive') {
+                newConfig[key] = value === 'true';
+            } else if (key === 'valuePerConversion' || key === 'minWithdrawAmount') {
+                newConfig[key] = parseFloat(value);
+            } else {
+                newConfig[key] = parseInt(value);
+            }
+        }
+
+        try {
+            await database.ref('appConfig').update(newConfig);
+            // Update local state with the new config, ensuring resetTimerHours is included
+            appConfig = { ...appConfig, ...newConfig };
+            showToast('Success', 'App configuration saved successfully.');
+            updateDashboardStats(); // Refresh dashboard stats
+        } catch (error) {
+            console.error("Failed to save app config:", error);
+            showToast('Error', 'Failed to save app configuration.', true);
+        }
+    }
+
+    // --- Users Management ---
+    function renderUsersTable(filter = '') {
+        const tableBody = document.getElementById('users-table-body');
+        tableBody.innerHTML = '';
+
+        const filteredUsers = Object.keys(usersData).filter(userId =>
+            userId.toLowerCase().includes(filter.toLowerCase()) ||
+            (usersData[userId].firstName && usersData[userId].firstName.toLowerCase().includes(filter.toLowerCase())) ||
+            (usersData[userId].username && usersData[userId].username.toLowerCase().includes(filter.toLowerCase()))
+        );
+
+        if (filteredUsers.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No users found.</td></tr>';
+            return;
+        }
+
+        filteredUsers.forEach(userId => {
+            const user = usersData[userId];
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${userId}</td>
+                <td>${user.firstName || user.username || 'N/A'}</td>
+                <td>${user.points || 0}</td>
+                <td>$${(user.balance || 0).toFixed(2)}</td>
+                <td>${user.referralCount || 0}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary action-btn" onclick="viewUserDetails('${userId}')"><i class="fas fa-eye"></i> View</button>
+                    <button class="btn btn-sm btn-outline-${user.isBlocked ? 'success' : 'danger'} action-btn" onclick="toggleUserBlock('${userId}', ${user.isBlocked})">
+                        ${user.isBlocked ? '<i class="fas fa-unlock"></i> Unblock' : '<i class="fas fa-ban"></i> Block'}
+                    </button>
+                    <button class="btn btn-sm btn-outline-info action-btn" onclick="openMessageReplyModal('${userId}')"><i class="fas fa-comment"></i> Message</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
         });
-      });
-      
-      // Set up search input listener
-      const userSearch = document.getElementById('user-search');
-      if (userSearch) {
-        userSearch.addEventListener('input', filterUsers);
-      }
-      const userStatusFilter = document.getElementById('user-status-filter');
-      if (userStatusFilter) {
-        userStatusFilter.addEventListener('change', filterUsers);
-      }
+    }
+
+    document.getElementById('user-search').addEventListener('input', function(e) {
+        renderUsersTable(e.target.value);
     });
 
-    // Make functions available globally for inline event handlers
-    window.showSection = showSection;
-    window.toggleUserStatus = toggleUserStatus;
-    window.openUserEditModal = openUserEditModal;
-    window.saveUserEdit = saveUserEdit;
-    window.updateWithdrawStatus = updateWithdrawStatus;
-    window.openEditStatusModal = openEditStatusModal;
-    window.updateWithdrawStatusFromModal = updateWithdrawStatusFromModal;
-    window.filterUsers = filterUsers;
-    window.openReplyModal = openReplyModal;
-    window.sendReply = sendReply;
-  </script>
+    async function toggleUserBlock(userId, isCurrentlyBlocked) {
+        const newBlockStatus = !isCurrentlyBlocked;
+        try {
+            await database.ref(`users/${userId}/isBlocked`).set(newBlockStatus);
+            // Update local state
+            if (usersData[userId]) {
+                usersData[userId].isBlocked = newBlockStatus;
+            }
+            showToast('Success', `User ${newBlockStatus ? 'blocked' : 'unblocked'} successfully.`);
+            // Reload users table to reflect changes
+            loadUsers();
+        } catch (error) {
+            console.error("Failed to toggle user block status:", error);
+            showToast('Error', `Failed to ${newBlockStatus ? 'block' : 'unblock'} user.`, true);
+        }
+    }
+
+    function viewUserDetails(userId) {
+        const user = usersData[userId];
+        if (!user) {
+            showToast('Error', 'User not found.', true);
+            return;
+        }
+        const detailContent = document.getElementById('user-detail-content');
+        detailContent.innerHTML = `
+            <h5>User ID: ${userId}</h5>
+            <p><strong>Name:</strong> ${user.firstName || 'N/A'}</p>
+            <p><strong>Username:</strong> ${user.username || 'N/A'}</p>
+            <p><strong>Points:</strong> <span id="detail-points">${user.points || 0}</span>
+                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="promptEditPoints('${userId}', ${user.points || 0})">Edit</button>
+            </p>
+            <p><strong>Balance ($):</strong> <span id="detail-balance">$${(user.balance || 0).toFixed(2)}</span>
+                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="promptEditBalance('${userId}', ${user.balance || 0})">Edit</button>
+            </p>
+            <p><strong>Referral Count:</strong> ${user.referralCount || 0}</p>
+            <p><strong>Referral Earnings:</strong> ${user.referralEarnings || 0}</p>
+            <p><strong>Is Blocked:</strong> <span class="badge bg-${user.isBlocked ? 'danger' : 'success'}">${user.isBlocked ? 'Yes' : 'No'}</span>
+                <button class="btn btn-sm btn-outline-${user.isBlocked ? 'success' : 'danger'} ms-2" onclick="toggleUserBlock('${userId}', ${user.isBlocked})">
+                    ${user.isBlocked ? 'Unblock' : 'Block'}
+                </button>
+            </p>
+            <p><strong>Ad Status:</strong>
+                <select id="ad-status-select" class="form-select form-select-sm d-inline-block w-auto">
+                    <option value="Active" ${user.adStatus === 'Active' ? 'selected' : ''}>Active</option>
+                    <option value="Inactive" ${user.adStatus === 'Inactive' ? 'selected' : ''}>Inactive</option>
+                </select>
+                <button class="btn btn-sm btn-outline-primary" onclick="updateUserAdStatus('${userId}')">Update</button>
+            </p>
+            <p><strong>Ads Watched Today:</strong> ${user.adsWatchedToday || 0}</p>
+            <p><strong>Last Ad Watch Time:</strong> ${user.lastAdWatchTime ? new Date(user.lastAdWatchTime).toLocaleString() : 'Never'}</p>
+            <p><strong>Created At:</strong> ${user.createdAt ? new Date(user.createdAt).toLocaleString() : 'N/A'}</p>
+        `;
+        const userDetailModal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+        userDetailModal.show();
+    }
+
+    async function updateUserAdStatus(userId) {
+        const newStatus = document.getElementById('ad-status-select').value;
+        try {
+            await database.ref(`users/${userId}/adStatus`).set(newStatus);
+            if (usersData[userId]) {
+                usersData[userId].adStatus = newStatus;
+            }
+            showToast('Success', 'User ad status updated successfully.');
+            // Reload users table and dashboard
+            loadUsers();
+        } catch (error) {
+            console.error("Failed to update user ad status:", error);
+            showToast('Error', 'Failed to update user ad status.', true);
+        }
+    }
+
+    function promptEditPoints(userId, currentPoints) {
+        const newPoints = prompt("Enter new points:", currentPoints);
+        if (newPoints !== null && !isNaN(newPoints)) {
+            updateUserData(userId, 'points', parseInt(newPoints));
+        }
+    }
+
+    function promptEditBalance(userId, currentBalance) {
+        const newBalance = prompt("Enter new balance ($):", currentBalance);
+        if (newBalance !== null && !isNaN(newBalance)) {
+            updateUserData(userId, 'balance', parseFloat(newBalance));
+        }
+    }
+
+    async function updateUserData(userId, field, value) {
+        try {
+            await database.ref(`users/${userId}/${field}`).set(value);
+            if (usersData[userId]) {
+                usersData[userId][field] = value;
+            }
+            showToast('Success', `${field} updated successfully.`);
+            // Reload users table and dashboard
+            loadUsers();
+            // If it was the user detail modal, update the displayed value
+            if (document.getElementById('userDetailModal').classList.contains('show')) {
+                 document.getElementById(`detail-${field}`).textContent = field === 'balance' ? `$${value.toFixed(2)}` : value;
+            }
+        } catch (error) {
+            console.error(`Failed to update user ${field}:`, error);
+            showToast('Error', `Failed to update ${field}.`, true);
+        }
+    }
+
+    // --- Withdrawals Management ---
+    function renderWithdrawalsTable() {
+        const tableBody = document.getElementById('withdrawals-table-body');
+        tableBody.innerHTML = '';
+
+        const sortedWithdrawals = Object.values(withdrawalsData).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        if (sortedWithdrawals.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No withdrawal requests found.</td></tr>';
+            return;
+        }
+
+        sortedWithdrawals.forEach(request => {
+            // Use the composite key to identify the request
+            const compositeKey = `${request.userId}/${request.requestId}`;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${request.userId}</td>
+                <td>$${parseFloat(request.amount).toFixed(2)}</td>
+                <td>${request.method}</td>
+                <td>${request.mobileNumber}</td>
+                <td>${new Date(request.timestamp).toLocaleString()}</td>
+                <td><span class="badge bg-${request.status === 'Pending' ? 'warning' : request.status === 'Success' ? 'success' : request.status === 'Rejected' ? 'danger' : 'info'}">${request.status}</span></td>
+                <td>
+                    <select class="form-select form-select-sm status-select" data-composite-key="${compositeKey}">
+                        <option value="Pending" ${request.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                        <option value="Processing" ${request.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                        <option value="Success" ${request.status === 'Success' ? 'selected' : ''}>Success</option>
+                        <option value="Rejected" ${request.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline-primary action-btn mt-1" onclick="updateWithdrawalStatus('${compositeKey}')">Update</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    async function updateWithdrawalStatus(compositeKey) {
+        // compositeKey is "userId/requestId"
+        const [userId, requestId] = compositeKey.split('/');
+        const selectElement = document.querySelector(`.status-select[data-composite-key="${compositeKey}"]`);
+        const newStatus = selectElement.value;
+
+        try {
+            await database.ref(`users/${userId}/withdrawHistory/${requestId}/status`).set(newStatus);
+            // Update local state
+            if (withdrawalsData[compositeKey]) {
+                withdrawalsData[compositeKey].status = newStatus;
+            }
+            showToast('Success', 'Withdrawal status updated successfully.');
+            // Reload withdrawals table
+            loadWithdrawals();
+        } catch (error) {
+            console.error("Failed to update withdrawal status:", error);
+            showToast('Error', 'Failed to update withdrawal status.', true);
+        }
+    }
+
+    // --- User Messages Management ---
+    function renderMessagesTable() {
+        const tableBody = document.getElementById('messages-table-body');
+        tableBody.innerHTML = '';
+
+        const sortedMessages = Object.values(messagesData).sort((a, b) => 
+            new Date(b.latestMessage.timestamp) - new Date(a.latestMessage.timestamp)
+        );
+
+        if (sortedMessages.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No user messages found.</td></tr>';
+            return;
+        }
+
+        sortedMessages.forEach(msgData => {
+            const userId = msgData.userId;
+            const latestMsg = msgData.latestMessage;
+            const user = usersData[userId] || {};
+            const userName = user.firstName || user.username || 'Unknown User';
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${userId} (${userName})</td>
+                <td>${latestMsg.text.substring(0, 50)}${latestMsg.text.length > 50 ? '...' : ''}</td>
+                <td>${new Date(latestMsg.timestamp).toLocaleString()}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary action-btn" onclick="openMessageReplyModal('${userId}')"><i class="fas fa-reply"></i> Reply</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    function openMessageReplyModal(userId) {
+        currentReplyUserId = userId;
+        const user = usersData[userId] || {};
+        const userName = user.firstName || user.username || userId;
+        document.getElementById('messageReplyModalLabel').textContent = `Reply to ${userName} (${userId})`;
+        document.getElementById('reply-user-id').value = userId;
+        document.getElementById('reply-message-input').value = '';
+
+        const messageHistoryDiv = document.getElementById('reply-message-history');
+        messageHistoryDiv.innerHTML = '<p class="text-center text-muted">Loading messages...</p>';
+
+        // Close any existing listener
+        if (replyMessagesListener) {
+             try {
+                // Remove previous listener
+                database.ref(`users/${currentReplyUserId}/adminMessages`).off('value', replyMessagesListener);
+             } catch (e) {
+                 console.warn("Could not remove previous message listener:", e);
+             }
+             replyMessagesListener = null;
+        }
+
+        // Load message history
+        loadReplyMessageHistory(userId);
+
+        // Setup real-time listener for new messages
+        setupReplyMessagesListener(userId);
+
+        const messageReplyModal = new bootstrap.Modal(document.getElementById('messageReplyModal'));
+        messageReplyModal.show();
+    }
+
+    async function loadReplyMessageHistory(userId) {
+        const messageHistoryDiv = document.getElementById('reply-message-history');
+        try {
+            const snapshot = await database.ref(`users/${userId}/adminMessages`).once('value');
+            const messages = snapshot.val();
+            renderReplyMessageHistory(messages);
+        } catch (error) {
+            console.error("Error loading reply message history:", error);
+            messageHistoryDiv.innerHTML = '<p class="text-center text-danger">Failed to load messages.</p>';
+        }
+    }
+
+    function renderReplyMessageHistory(messagesData) {
+        const historyDiv = document.getElementById('reply-message-history');
+        if (!messagesData) {
+            historyDiv.innerHTML = '<p class="text-center text-muted">No messages yet. Start a conversation!</p>';
+            return;
+        }
+        const messages = Object.values(messagesData);
+        // Sort messages by timestamp
+        messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        
+        historyDiv.innerHTML = '';
+        messages.forEach(msg => {
+            const isSent = msg.sender === 'admin'; // Assuming 'admin' is the sender for admin replies
+            const bubbleClass = isSent ? 'sent-message' : 'received-message';
+            const alignStyle = isSent ? 'margin-left: auto;' : 'margin-right: auto;';
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message-bubble ${bubbleClass}`;
+            messageDiv.style.cssText = alignStyle; // Apply alignment style
+            messageDiv.innerHTML = `
+                ${msg.text}
+                <br><small>${new Date(msg.timestamp).toLocaleTimeString()}</small>
+            `;
+            historyDiv.appendChild(messageDiv);
+        });
+        
+        // Scroll to bottom
+        historyDiv.scrollTop = historyDiv.scrollHeight;
+    }
+
+    function setupReplyMessagesListener(userId) {
+        const userRef = database.ref(`users/${userId}/adminMessages`);
+        
+        // Define the callback function so we can reference it for .off()
+        const messagesCallback = (snapshot) => {
+            const messages = snapshot.val();
+            renderReplyMessageHistory(messages);
+        };
+
+        // Store the callback for later removal
+        window.lastReplyMessagesListener = messagesCallback;
+
+        // Set up new listener
+        replyMessagesListener = userRef.on('value', messagesCallback, (error) => {
+            console.error("Error listening to reply messages:", error);
+            const messageHistoryDiv = document.getElementById('reply-message-history');
+            messageHistoryDiv.innerHTML = '<p class="text-center text-danger">Error loading messages.</p>';
+        });
+    }
+
+    async function sendReplyMessage() {
+        const userId = document.getElementById('reply-user-id').value;
+        const input = document.getElementById('reply-message-input');
+        const messageText = input.value.trim();
+
+        if (!messageText || !userId) {
+            showToast('Error', 'Message text or user ID is missing.', true);
+            return;
+        }
+
+        if (!auth.currentUser) {
+            showToast('Error', 'You must be logged in to send a message.', true);
+            return;
+        }
+
+        const messageData = {
+            sender: 'admin', // Mark message as from admin
+            text: messageText,
+            timestamp: new Date().toISOString()
+        };
+
+        try {
+            await database.ref(`users/${userId}/adminMessages`).push(messageData);
+            console.log("Reply message sent to Firebase for user:", userId);
+            input.value = ''; // Clear input
+            // The UI will update automatically via the listener
+            // Optionally, scroll to bottom again after sending
+             const historyDiv = document.getElementById('reply-message-history');
+             historyDiv.scrollTop = historyDiv.scrollHeight;
+        } catch (error) {
+            console.error("Error sending reply message:", error);
+            showToast('Error', 'Failed to send reply message. Please try again.', true);
+        }
+    }
+
+    // Attach sendReplyMessage to the button click
+    document.getElementById('send-reply-message').addEventListener('click', sendReplyMessage);
+    // Also allow sending with Enter key in the input
+    document.getElementById('reply-message-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendReplyMessage();
+        }
+    });
+
+    // --- Notices Management ---
+    function renderNoticesTable() {
+        const tableBody = document.getElementById('notices-table-body');
+        tableBody.innerHTML = '';
+
+        const sortedNotices = Object.entries(noticesData).sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp));
+
+        if (sortedNotices.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No notices found.</td></tr>';
+            return;
+        }
+
+        sortedNotices.forEach(([key, notice]) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${notice.title}</td>
+                <td>${notice.message.substring(0, 50)}${notice.message.length > 50 ? '...' : ''}</td>
+                <td>${new Date(notice.timestamp).toLocaleString()}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary action-btn" onclick="openNoticeModal('edit', '${key}', '${notice.title}', '${notice.message.replace(/'/g, "\\'")}')"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn btn-sm btn-outline-danger action-btn" onclick="deleteNotice('${key}')"><i class="fas fa-trash"></i> Delete</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    function openNoticeModal(mode, key = '', title = '', message = '') {
+        document.getElementById('notice-key').value = key;
+        document.getElementById('notice-title').value = title;
+        document.getElementById('notice-message').value = message;
+        document.getElementById('noticeModalLabel').textContent = mode === 'edit' ? 'Edit Notice' : 'Add New Notice';
+    }
+
+    async function saveNotice() {
+        const key = document.getElementById('notice-key').value;
+        const title = document.getElementById('notice-title').value.trim();
+        const message = document.getElementById('notice-message').value.trim();
+
+        if (!title || !message) {
+            showToast('Error', 'Title and message are required.', true);
+            return;
+        }
+
+        try {
+            if (key) {
+                // Edit existing notice
+                await database.ref(`notices/${key}`).update({
+                    title: title,
+                    message: message
+                });
+                showToast('Success', 'Notice updated successfully.');
+            } else {
+                // Add new notice
+                const newNoticeRef = database.ref('notices').push();
+                await newNoticeRef.set({
+                    title: title,
+                    message: message,
+                    timestamp: new Date().toISOString()
+                });
+                showToast('Success', 'Notice added successfully.');
+            }
+            // Reload notices
+            loadNotices();
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('noticeModal'));
+            modal.hide();
+        } catch (error) {
+            console.error("Failed to save notice:", error);
+            showToast('Error', 'Failed to save notice.', true);
+        }
+    }
+
+    async function deleteNotice(key) {
+        if (!confirm("Are you sure you want to delete this notice?")) {
+            return;
+        }
+        try {
+            await database.ref(`notices/${key}`).remove();
+            showToast('Success', 'Notice deleted successfully.');
+            // Reload notices
+            loadNotices();
+        } catch (error) {
+            console.error("Failed to delete notice:", error);
+            showToast('Error', 'Failed to delete notice.', true);
+        }
+    }
+
+    // --- Cleanup ---
+    window.addEventListener('beforeunload', () => {
+        // Remove the reply messages listener if it exists
+        if (replyMessagesListener && currentReplyUserId) {
+             try {
+                const oldRef = database.ref(`users/${currentReplyUserId}/adminMessages`);
+                oldRef.off('value', replyMessagesListener);
+             } catch (e) {
+                 console.warn("Could not remove message listener on unload:", e);
+             }
+             replyMessagesListener = null;
+             currentReplyUserId = null;
+        }
+    });
+
+    // Also remove listener when the message reply modal is hidden
+    document.getElementById('messageReplyModal').addEventListener('hidden.bs.modal', function () {
+        if (replyMessagesListener && currentReplyUserId) {
+             try {
+                const oldRef = database.ref(`users/${currentReplyUserId}/adminMessages`);
+                oldRef.off('value', replyMessagesListener);
+             } catch (e) {
+                 console.warn("Could not remove message listener on modal close:", e);
+             }
+             replyMessagesListener = null;
+             currentReplyUserId = null;
+        }
+    });
+
+    // Listen for auth state changes to handle logout/login
+    auth.onAuthStateChanged((user) => {
+        if (!user) {
+            // User is signed out
+            document.getElementById('user-info').style.display = 'none';
+            document.getElementById('nav-dashboard').style.display = 'none';
+            document.getElementById('sidebarMenu').style.display = 'none';
+            // Show login section if not already shown
+            if (!document.getElementById('login-section').classList.contains('active')) {
+                showSection('login-section');
+            }
+        }
+    });
+
+</script>
 </body>
 </html>
 ```
