@@ -1,20 +1,3 @@
-ঠিক আছে, আপনি যা বলেছেন তা আমি বুঝতে পেরেছি। আপনার সমস্যা হল:
-
-1.  ইউজার অ্যাপ (`index.html`) থেকে এডমিন প্যানেলে মেসেজ পাঠানো যাচ্ছে।
-2.  কিন্তু এডমিন প্যানেল থেকে ইউজারকে রিপ্লাই মেসেজ পাঠানো যাচ্ছে না।
-
-আমি আগের এডমিন প্যানেলের কোডে এই সমস্যাটি খুঁজে পেয়েছি এবং এখন এটি ঠিক করে সম্পূর্ণ কোড দিচ্ছি।
-
-**পরিবর্তন/ফিক্স:**
-
-1.  **Firebase Path:** ইউজার অ্যাপ মেসেজগুলো `users/{USER_ID}/adminMessages` পাথে পাঠাচ্ছে। এডমিন প্যানেলও একই পাথে রিপ্লাই মেসেজ পাঠাবে এবং লিসেন করবে।
-2.  **Message Sending Logic:** এডমিন প্যানেলের রিপ্লাই মেসেজ পাঠানোর ফাংশন (`sendReplyMessage`) ঠিক করা হয়েছে। এটি এখন সঠিকভাবে `users/{REPLY_USER_ID}/adminMessages` পাথে মেসেজ পাঠাবে এবং সেটা `sender: 'admin'` হিসাবে মার্ক করবে।
-3.  **Real-time Listener:** রিপ্লাই মডালে মেসেজ লিসেনার (`setupReplyMessagesListener`) ঠিক করা হয়েছে যাতে নতুন মেসেজগুলো রিয়েল-টাইমে আপডেট হয়।
-4.  **UI Rendering:** মেসেজ হিস্টোরি রেন্ডারিং (`renderReplyMessageHistory`) ঠিক করা হয়েছে যাতে এডমিন এবং ইউজার মেসেজগুলো সঠিকভাবে ডানে/বামে সাজানো হয়।
-
-**এখানে আপডেটেড এডমিন প্যানেলের সম্পূর্ণ কোড রয়েছে:**
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -115,15 +98,15 @@
             word-wrap: break-word;
             font-size: 15px; /* Increased font size */
         }
-        .sent-message { /* Admin messages */
+        .sent-message {
             background-color: #007bff; /* Bootstrap primary color */
             color: white;
-            margin-left: auto; /* Align right for admin */
+            margin-left: auto; /* Align right */
         }
-        .received-message { /* User messages */
+        .received-message {
             background-color: #e9ecef; /* Bootstrap light color */
             color: #212529; /* Bootstrap dark color */
-            margin-right: auto; /* Align left for user */
+            margin-right: auto; /* Align left */
         }
         /* --- End Update --- */
     </style>
@@ -419,6 +402,9 @@
                                 <th>Latest Message</th>
                                 <th>Timestamp</th>
                                 <th>Actions</th>
+                                <!-- --- Update: Added Clear Chat Column Header --- -->
+                                <th>Clear Chat</th>
+                                <!-- --- End Update --- -->
                             </tr>
                         </thead>
                         <tbody id="messages-table-body">
@@ -602,7 +588,7 @@
         } else if (sectionId === 'withdrawals-section') {
             loadWithdrawals();
         } else if (sectionId === 'messages-section') {
-            loadUserMessages(); // Load messages when this section is shown
+            loadUserMessages();
         } else if (sectionId === 'notices-section') {
             loadNotices();
         } else if (sectionId === 'dashboard-section') {
@@ -659,7 +645,10 @@
                 const errorCode = error.code;
                 const errorMessage = error.message;
                 console.error("Login error:", errorCode, errorMessage);
-                if (errorMessage.includes('Unauthorized access')) {
+                // Handle specific errors
+                if (errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password') {
+                    errorDiv.textContent = 'Invalid email or password.';
+                } else if (errorMessage.includes('Unauthorized access')) {
                     errorDiv.textContent = 'Access denied. You are not authorized as an admin.';
                 } else {
                     errorDiv.textContent = errorMessage;
@@ -667,7 +656,6 @@
                 errorDiv.style.display = 'block';
             });
     }
-
 
     function logout() {
         auth.signOut().then(() => {
@@ -829,7 +817,6 @@
             showLoading(false);
         }
     }
-
 
     // --- Dashboard Updates ---
     function updateDashboardStats() {
@@ -1153,7 +1140,9 @@
         );
 
         if (sortedMessages.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No user messages found.</td></tr>';
+            // --- Update: Adjust colspan to 5 if Clear Chat column is added --->
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No user messages found.</td></tr>';
+            // --- End Update ---
             return;
         }
 
@@ -1164,6 +1153,7 @@
             const userName = user.firstName || user.username || 'Unknown User';
 
             const row = document.createElement('tr');
+            // --- Update: Added Clear Chat cell --->
             row.innerHTML = `
                 <td>${userId} (${userName})</td>
                 <td>${latestMsg.text.substring(0, 50)}${latestMsg.text.length > 50 ? '...' : ''}</td>
@@ -1171,10 +1161,42 @@
                 <td>
                     <button class="btn btn-sm btn-outline-primary action-btn" onclick="openMessageReplyModal('${userId}')"><i class="fas fa-reply"></i> Reply</button>
                 </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-danger action-btn" onclick="clearUserChat('${userId}')"><i class="fas fa-trash"></i> Clear Chat</button>
+                </td>
             `;
+            // --- End Update ---
             tableBody.appendChild(row);
         });
     }
+
+    // --- Update: New function to clear user chat --->
+    async function clearUserChat(userId) {
+        if (!confirm(`Are you sure you want to clear ALL messages for user ${userId}? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            // Reference to the user's adminMessages node
+            const userMessagesRef = database.ref(`users/${userId}/adminMessages`);
+
+            // Remove all messages under this node
+            await userMessagesRef.remove();
+
+            console.log(`All messages cleared for user: ${userId}`);
+            showToast('Success', `All messages cleared for user ${userId}.`);
+
+            // Optional: Reload the messages table to reflect the change
+            if (document.getElementById('messages-section').classList.contains('active')) {
+                 loadUserMessages(); // Reload messages if the section is active
+            }
+
+        } catch (error) {
+            console.error("Error clearing user chat:", error);
+            showToast('Error', `Failed to clear messages for user ${userId}. Please try again.`, true);
+        }
+    }
+    // --- End Update ---
 
     function openMessageReplyModal(userId) {
         currentReplyUserId = userId;
@@ -1239,12 +1261,13 @@
         // --- Update: Create message elements and append them correctly ---
         historyDiv.innerHTML = ''; // Clear previous content
         messages.forEach(msg => {
-            const isUser = msg.sender === 'user'; // Check sender
-            const bubbleClass = isUser ? 'received-message' : 'sent-message'; // Apply correct class
+            const isSent = msg.sender === 'admin'; // Check sender
+            const bubbleClass = isSent ? 'sent-message' : 'received-message'; // Apply correct class
+            const alignStyle = isSent ? 'margin-left: auto;' : 'margin-right: auto;'; // Apply alignment style
 
             const messageDiv = document.createElement('div');
             messageDiv.className = `message-bubble ${bubbleClass}`;
-
+            messageDiv.style.cssText = alignStyle; // Apply alignment style
             messageDiv.innerHTML = `
                 ${msg.text}
                 <br><small>${new Date(msg.timestamp).toLocaleTimeString()}</small>
@@ -1276,7 +1299,6 @@
         });
     }
 
-    // --- Fix: Corrected sendReplyMessage function ---
     async function sendReplyMessage() {
         const userId = document.getElementById('reply-user-id').value;
         const input = document.getElementById('reply-message-input');
@@ -1287,18 +1309,19 @@
             return;
         }
 
-        // --- Fix: Prepare message data correctly ---
+        if (!auth.currentUser) {
+            showToast('Error', 'You must be logged in to send a message.', true);
+            return;
+        }
+
         const messageData = {
-            sender: 'admin', // <<--- IMPORTANT: Mark message as from admin
+            sender: 'admin', // Mark message as from admin
             text: messageText,
             timestamp: new Date().toISOString()
         };
-        // --- End Fix ---
 
         try {
-            // --- Fix: Push message to the correct Firebase path for the specific user ---
             await database.ref(`users/${userId}/adminMessages`).push(messageData);
-            // --- End Fix ---
             console.log("Reply message sent to Firebase for user:", userId);
             input.value = ''; // Clear input
             // The UI will update automatically via the listener
@@ -1307,16 +1330,15 @@
             showToast('Error', 'Failed to send reply message. Please try again.', true);
         }
     }
-    // --- End Fix ---
 
-    // Attach sendReplyMessage to the button click and Enter key
+    // Attach sendReplyMessage to the button click
     document.getElementById('send-reply-message').addEventListener('click', sendReplyMessage);
+    // Also allow sending with Enter key in the input
     document.getElementById('reply-message-input').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             sendReplyMessage();
         }
     });
-
 
     // --- Notices Management ---
     function renderNoticesTable() {
@@ -1441,14 +1463,20 @@
         currentReplyUserId = null;
     });
 
+    // Listen for auth state changes to handle logout/login
+    auth.onAuthStateChanged((user) => {
+        if (!user) {
+            // User is signed out
+            document.getElementById('user-info').style.display = 'none';
+            document.getElementById('nav-dashboard').style.display = 'none';
+            document.getElementById('sidebarMenu').style.display = 'none';
+            // Show login section if not already shown
+            if (!document.getElementById('login-section').classList.contains('active')) {
+                showSection('login-section');
+            }
+        }
+    });
+
 </script>
 </body>
 </html>
-```
-
-এই আপডেটেড কোডে:
-
-1.  **লগইন:** এখন Firebase Authentication এবং `admins` ডাটাবেস নোড চেক করে লগইন করবে।
-2.  **মেসেজিং:** রিপ্লাই মেসেজ পাঠানো (`sendReplyMessage`) এবং রিসিভ করা (`setupReplyMessagesListener`, `renderReplyMessageHistory`) সঠিকভাবে `users/{USER_ID}/adminMessages` পাথ ব্যবহার করে কাজ করবে।
-3.  **UI:** মেসেজগুলো এডমিন (ডানে) এবং ইউজার (বামে) সঠিকভাবে সাজানো হবে।
-4.  **লিসেনার ম্যানেজমেন্ট:** মডাল ক্লোজ বা পেজ আনলোড হলে লিসেনারগুলো সঠিকভাবে রিমুভ হবে।
