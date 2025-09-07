@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,8 +11,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <!-- Removed Firebase Auth SDK as it's no longer needed -->
     <style>
         body {
             padding-top: 60px; /* Space for fixed navbar */
@@ -26,6 +27,8 @@
             padding: 0;
             box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
             background-color: #fff;
+            /* Initially hide the sidebar */
+            display: none;
         }
         .sidebar-sticky {
             position: relative;
@@ -109,6 +112,20 @@
             margin-right: auto; /* Align left for user */
         }
         /* --- End Update --- */
+        /* Disable links in navbar and sidebar when not logged in */
+        .nav-link.disabled {
+            color: #ccc !important;
+            pointer-events: none;
+            cursor: not-allowed;
+        }
+        #nav-dashboard, #user-info {
+            display: none;
+        }
+        /* Initially hide sidebar links */
+        #sidebar-dashboard, #sidebar-config, #sidebar-users,
+        #sidebar-withdrawals, #sidebar-messages, #sidebar-notices {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -124,11 +141,27 @@
                 <li class="nav-item">
                     <a class="nav-link" href="#" onclick="showSection('login-section'); return false;" id="nav-login">Login</a>
                 </li>
+                <!-- Initially disabled links -->
                 <li class="nav-item">
-                    <a class="nav-link" href="#" onclick="showSection('dashboard-section'); return false;" id="nav-dashboard" style="display:none;">Dashboard</a>
+                    <a class="nav-link disabled" href="#" onclick="return false;" id="nav-dashboard-link">Dashboard</a>
+                </li>
+                 <li class="nav-item">
+                    <a class="nav-link disabled" href="#" onclick="return false;" id="nav-config-link">App Configuration</a>
+                </li>
+                 <li class="nav-item">
+                    <a class="nav-link disabled" href="#" onclick="return false;" id="nav-users-link">Users</a>
+                </li>
+                 <li class="nav-item">
+                    <a class="nav-link disabled" href="#" onclick="return false;" id="nav-withdrawals-link">Withdrawals</a>
+                </li>
+                 <li class="nav-item">
+                    <a class="nav-link disabled" href="#" onclick="return false;" id="nav-messages-link">User Messages</a>
+                </li>
+                 <li class="nav-item">
+                    <a class="nav-link disabled" href="#" onclick="return false;" id="nav-notices-link">Important Notices</a>
                 </li>
             </ul>
-            <span class="navbar-text" id="user-info" style="display:none;">
+            <span class="navbar-text" id="user-info">
                 Logged in as: <span id="logged-in-email"></span>
                 <button class="btn btn-outline-light btn-sm ms-2" onclick="logout()">Logout</button>
             </span>
@@ -138,36 +171,37 @@
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar -->
-        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
             <div class="position-sticky pt-3 sidebar-sticky">
                 <ul class="nav flex-column">
+                    <!-- Initially disabled links -->
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showSection('dashboard-section'); return false;" id="sidebar-dashboard">
+                        <a class="nav-link disabled" href="#" onclick="return false;" id="sidebar-dashboard-link">
                             <i class="fas fa-tachometer-alt"></i> Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showSection('config-section'); return false;" id="sidebar-config">
+                        <a class="nav-link disabled" href="#" onclick="return false;" id="sidebar-config-link">
                             <i class="fas fa-cogs"></i> App Configuration
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showSection('users-section'); return false;" id="sidebar-users">
+                        <a class="nav-link disabled" href="#" onclick="return false;" id="sidebar-users-link">
                             <i class="fas fa-users"></i> Users
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showSection('withdrawals-section'); return false;" id="sidebar-withdrawals">
+                        <a class="nav-link disabled" href="#" onclick="return false;" id="sidebar-withdrawals-link">
                             <i class="fas fa-money-bill-wave"></i> Withdrawals
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showSection('messages-section'); return false;" id="sidebar-messages">
+                        <a class="nav-link disabled" href="#" onclick="return false;" id="sidebar-messages-link">
                             <i class="fas fa-comments"></i> User Messages
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showSection('notices-section'); return false;" id="sidebar-notices">
+                        <a class="nav-link disabled" href="#" onclick="return false;" id="sidebar-notices-link">
                             <i class="fas fa-bullhorn"></i> Important Notices
                         </a>
                     </li>
@@ -187,7 +221,7 @@
                             <h3 class="card-title text-center mb-4">Admin Login</h3>
                             <div class="mb-3">
                                 <label for="admin-uid" class="form-label">Admin UID</label>
-                                <input type="text" class="form-control" id="admin-uid" placeholder="Enter your Admin UID" required>
+                                <input type="text" class="form-control" id="admin-uid" placeholder="Enter Admin UID" required>
                             </div>
                             <button class="btn btn-primary w-100" onclick="loginByUid()">Login</button>
                             <div id="login-error" class="text-danger mt-2" style="display: none;"></div>
@@ -524,7 +558,6 @@
     };
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const database = firebase.database();
     // --- State Variables ---
     let appConfig = {};
@@ -576,49 +609,97 @@
         }
     }
     // --- Authentication ---
-    async function loginByUid() {
+    function loginByUid() {
         const uid = document.getElementById('admin-uid').value.trim();
         const errorDiv = document.getElementById('login-error');
         errorDiv.style.display = 'none';
+
+        // Hardcoded UID for login
+        const requiredUid = 'YC0HCH4qQaUuVQsrAmfk5WiBfQ43';
+
         if (!uid) {
-            errorDiv.textContent = 'Please enter your Admin UID.';
+            errorDiv.textContent = 'Please enter Admin UID.';
             errorDiv.style.display = 'block';
             return;
         }
-        try {
-            // Check if the UID exists in the 'admins' list in the database
-            const snapshot = await database.ref('admins/' + uid).once('value');
-            if (snapshot.exists()) {
-                // UID exists in admins list, proceed
-                console.log("Admin logged in with UID:", uid);
-                document.getElementById('logged-in-email').textContent = uid;
-                document.getElementById('user-info').style.display = 'block';
-                document.getElementById('nav-dashboard').style.display = 'block';
-                document.getElementById('sidebarMenu').style.display = 'block'; // Show sidebar
-                showSection('dashboard-section');
-                initializeApp(); // Load initial data
-            } else {
-                // UID does not exist in admins list, show error
-                errorDiv.textContent = 'Invalid Admin UID. Access denied.';
-                errorDiv.style.display = 'block';
-            }
-        } catch (error) {
-            console.error("Error checking admin UID:", error);
-            errorDiv.textContent = 'An error occurred while logging in. Please try again.';
-            errorDiv.style.display = 'block';
+
+        if (uid !== requiredUid) {
+             errorDiv.textContent = 'Invalid Admin UID.';
+             errorDiv.style.display = 'block';
+             return;
         }
+
+        // If UID is correct
+        console.log("Admin logged in with UID:", uid);
+        document.getElementById('logged-in-email').textContent = uid;
+        document.getElementById('user-info').style.display = 'block';
+        // Enable navbar links
+        document.getElementById('nav-dashboard-link').classList.remove('disabled');
+        document.getElementById('nav-dashboard-link').onclick = function() { showSection('dashboard-section'); return false; };
+        document.getElementById('nav-config-link').classList.remove('disabled');
+        document.getElementById('nav-config-link').onclick = function() { showSection('config-section'); return false; };
+        document.getElementById('nav-users-link').classList.remove('disabled');
+        document.getElementById('nav-users-link').onclick = function() { showSection('users-section'); return false; };
+        document.getElementById('nav-withdrawals-link').classList.remove('disabled');
+        document.getElementById('nav-withdrawals-link').onclick = function() { showSection('withdrawals-section'); return false; };
+        document.getElementById('nav-messages-link').classList.remove('disabled');
+        document.getElementById('nav-messages-link').onclick = function() { showSection('messages-section'); return false; };
+        document.getElementById('nav-notices-link').classList.remove('disabled');
+        document.getElementById('nav-notices-link').onclick = function() { showSection('notices-section'); return false; };
+        // Show sidebar and enable sidebar links
+        document.getElementById('sidebarMenu').style.display = 'block';
+        document.getElementById('sidebar-dashboard-link').classList.remove('disabled');
+        document.getElementById('sidebar-dashboard-link').onclick = function() { showSection('dashboard-section'); return false; };
+        document.getElementById('sidebar-config-link').classList.remove('disabled');
+        document.getElementById('sidebar-config-link').onclick = function() { showSection('config-section'); return false; };
+        document.getElementById('sidebar-users-link').classList.remove('disabled');
+        document.getElementById('sidebar-users-link').onclick = function() { showSection('users-section'); return false; };
+        document.getElementById('sidebar-withdrawals-link').classList.remove('disabled');
+        document.getElementById('sidebar-withdrawals-link').onclick = function() { showSection('withdrawals-section'); return false; };
+        document.getElementById('sidebar-messages-link').classList.remove('disabled');
+        document.getElementById('sidebar-messages-link').onclick = function() { showSection('messages-section'); return false; };
+        document.getElementById('sidebar-notices-link').classList.remove('disabled');
+        document.getElementById('sidebar-notices-link').onclick = function() { showSection('notices-section'); return false; };
+        showSection('dashboard-section');
+        initializeApp(); // Load initial data
     }
+
+
     function logout() {
-        // For UID-based login, we don't need to sign out from Firebase Auth
-        // We just need to reset the UI state
+        // Reset UI state
         console.log("Admin logged out");
         // Redirect to login section
         showSection('login-section');
-         // Hide navbar links for logged-in sections
-        document.getElementById('nav-dashboard').style.display = 'none';
+        // Disable navbar links
+        document.getElementById('nav-dashboard-link').classList.add('disabled');
+        document.getElementById('nav-dashboard-link').onclick = function() { return false; };
+        document.getElementById('nav-config-link').classList.add('disabled');
+        document.getElementById('nav-config-link').onclick = function() { return false; };
+        document.getElementById('nav-users-link').classList.add('disabled');
+        document.getElementById('nav-users-link').onclick = function() { return false; };
+        document.getElementById('nav-withdrawals-link').classList.add('disabled');
+        document.getElementById('nav-withdrawals-link').onclick = function() { return false; };
+        document.getElementById('nav-messages-link').classList.add('disabled');
+        document.getElementById('nav-messages-link').onclick = function() { return false; };
+        document.getElementById('nav-notices-link').classList.add('disabled');
+        document.getElementById('nav-notices-link').onclick = function() { return false; };
         document.getElementById('user-info').style.display = 'none';
-        // Hide sidebar
+        // Hide sidebar and disable sidebar links
         document.getElementById('sidebarMenu').style.display = 'none';
+        document.getElementById('sidebar-dashboard-link').classList.add('disabled');
+        document.getElementById('sidebar-dashboard-link').onclick = function() { return false; };
+        document.getElementById('sidebar-config-link').classList.add('disabled');
+        document.getElementById('sidebar-config-link').onclick = function() { return false; };
+        document.getElementById('sidebar-users-link').classList.add('disabled');
+        document.getElementById('sidebar-users-link').onclick = function() { return false; };
+        document.getElementById('sidebar-withdrawals-link').classList.add('disabled');
+        document.getElementById('sidebar-withdrawals-link').onclick = function() { return false; };
+        document.getElementById('sidebar-messages-link').classList.add('disabled');
+        document.getElementById('sidebar-messages-link').onclick = function() { return false; };
+        document.getElementById('sidebar-notices-link').classList.add('disabled');
+        document.getElementById('sidebar-notices-link').onclick = function() { return false; };
+         // Clear the UID input field
+        document.getElementById('admin-uid').value = '';
     }
     // --- App Initialization ---
     async function initializeApp() {
@@ -1066,14 +1147,14 @@
                 <td>${new Date(latestMsg.timestamp).toLocaleString()}</td>
                 <td>
                     <button class="btn btn-sm btn-outline-primary action-btn" onclick="openMessageReplyModal('${userId}')"><i class="fas fa-reply"></i> Reply</button>
-                    <button class="btn btn-sm btn-outline-danger action-btn" onclick="clearUserMessagesFromTable('${userId}')"><i class="fas fa-trash"></i> Clear</button>
+                     <button class="btn btn-sm btn-outline-danger action-btn" onclick="clearUserMessagesFromTable('${userId}')"><i class="fas fa-trash"></i> Clear</button>
                 </td>
             `;
             tableBody.appendChild(row);
         });
     }
 
-    // নতুন ফাংশন: Messages table থেকে মেসেজ ক্লিয়ার করতে
+     // নতুন ফাংশন: Messages table থেকে মেসেজ ক্লিয়ার করতে
     async function clearUserMessagesFromTable(userId) {
         if (!confirm(`Are you sure you want to delete ALL messages for user ${userId}? This action cannot be undone.`)) {
             return;
@@ -1089,6 +1170,7 @@
             showToast('Error', 'Failed to clear messages. Please try again.', true);
         }
     }
+
 
     function openMessageReplyModal(userId) {
         currentReplyUserId = userId;
@@ -1202,7 +1284,8 @@
             showToast('Error', 'Failed to send reply message. Please try again.', true);
         }
     }
-    // --- New Function: Clear User Messages from Modal ---
+
+     // --- New Function: Clear User Messages from Modal ---
     async function clearUserMessages() {
         const userId = document.getElementById('reply-user-id').value;
         if (!userId) {
@@ -1223,10 +1306,10 @@
             // Clear the message history display in the modal
             const messageHistoryDiv = document.getElementById('reply-message-history');
             messageHistoryDiv.innerHTML = '<p class="text-center text-muted">No messages yet. Start a conversation!</p>';
-            
+
             // Reload the messages section table to reflect the change
             loadUserMessages();
-            
+
         } catch (error) {
             console.error("Error clearing messages:", error);
             showToast('Error', 'Failed to clear messages. Please try again.', true);
@@ -1357,3 +1440,4 @@
 </script>
 </body>
 </html>
+```
