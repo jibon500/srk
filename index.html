@@ -186,14 +186,10 @@
                         <div class="card-body">
                             <h3 class="card-title text-center mb-4">Admin Login</h3>
                             <div class="mb-3">
-                                <label for="admin-email" class="form-label">Email address</label>
-                                <input type="email" class="form-control" id="admin-email" required>
+                                <label for="admin-uid" class="form-label">Admin UID</label>
+                                <input type="text" class="form-control" id="admin-uid" placeholder="Enter your Admin UID" required>
                             </div>
-                            <div class="mb-3">
-                                <label for="admin-password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="admin-password" required>
-                            </div>
-                            <button class="btn btn-primary w-100" onclick="login()">Login</button>
+                            <button class="btn btn-primary w-100" onclick="loginByUid()">Login</button>
                             <div id="login-error" class="text-danger mt-2" style="display: none;"></div>
                         </div>
                     </div>
@@ -392,7 +388,7 @@
                                 <th>User ID</th>
                                 <th>Latest Message</th>
                                 <th>Timestamp</th>
-                                <th>Actions</th> <!-- এখানে এক্শন কলাম -->
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="messages-table-body">
@@ -494,7 +490,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <!-- নতুন ক্লিয়ার মেসেজ বাটন -->
+                <!-- Clear Messages Button -->
                 <button type="button" class="btn btn-danger" onclick="clearUserMessages()">Clear Messages</button>
             </div>
         </div>
@@ -580,66 +576,49 @@
         }
     }
     // --- Authentication ---
-    function login() {
-        const email = document.getElementById('admin-email').value;
-        const password = document.getElementById('admin-password').value;
+    async function loginByUid() {
+        const uid = document.getElementById('admin-uid').value.trim();
         const errorDiv = document.getElementById('login-error');
         errorDiv.style.display = 'none';
-        if (!email || !password) {
-            errorDiv.textContent = 'Please enter email and password.';
+        if (!uid) {
+            errorDiv.textContent = 'Please enter your Admin UID.';
             errorDiv.style.display = 'block';
             return;
         }
-        auth.signInWithEmailAndPassword(email, password)
-            .then((userCredential) => {
-                // Signed in
-                const user = userCredential.user;
-                console.log("Admin logged in:", user.email);
-                // Check if UID exists in the 'admins' list in the database
-                return database.ref('admins/' + user.uid).once('value');
-            })
-            .then((snapshot) => {
-                if (snapshot.exists()) {
-                    // UID exists in admins list, proceed
-                    document.getElementById('logged-in-email').textContent = auth.currentUser.email;
-                    document.getElementById('user-info').style.display = 'block';
-                    document.getElementById('nav-dashboard').style.display = 'block';
-                    document.getElementById('sidebarMenu').style.display = 'block'; // Show sidebar
-                    showSection('dashboard-section');
-                    initializeApp(); // Load initial data
-                } else {
-                    // UID does not exist in admins list, logout
-                    return auth.signOut().then(() => {
-                        throw new Error('Unauthorized access. UID not found in admins list.');
-                    });
-                }
-            })
-            .catch((error) => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                console.error("Login error:", errorCode, errorMessage);
-                if (errorMessage.includes('Unauthorized access')) {
-                    errorDiv.textContent = 'Access denied. You are not authorized as an admin.';
-                } else {
-                    errorDiv.textContent = errorMessage;
-                }
+        try {
+            // Check if the UID exists in the 'admins' list in the database
+            const snapshot = await database.ref('admins/' + uid).once('value');
+            if (snapshot.exists()) {
+                // UID exists in admins list, proceed
+                console.log("Admin logged in with UID:", uid);
+                document.getElementById('logged-in-email').textContent = uid;
+                document.getElementById('user-info').style.display = 'block';
+                document.getElementById('nav-dashboard').style.display = 'block';
+                document.getElementById('sidebarMenu').style.display = 'block'; // Show sidebar
+                showSection('dashboard-section');
+                initializeApp(); // Load initial data
+            } else {
+                // UID does not exist in admins list, show error
+                errorDiv.textContent = 'Invalid Admin UID. Access denied.';
                 errorDiv.style.display = 'block';
-            });
+            }
+        } catch (error) {
+            console.error("Error checking admin UID:", error);
+            errorDiv.textContent = 'An error occurred while logging in. Please try again.';
+            errorDiv.style.display = 'block';
+        }
     }
     function logout() {
-        auth.signOut().then(() => {
-            console.log("Admin logged out");
-            // Redirect to login section
-            showSection('login-section');
-             // Hide navbar links for logged-in sections
-            document.getElementById('nav-dashboard').style.display = 'none';
-            document.getElementById('user-info').style.display = 'none';
-            // Hide sidebar
-            document.getElementById('sidebarMenu').style.display = 'none';
-        }).catch((error) => {
-            console.error("Logout error:", error);
-            showToast('Error', 'Failed to logout.', true);
-        });
+        // For UID-based login, we don't need to sign out from Firebase Auth
+        // We just need to reset the UI state
+        console.log("Admin logged out");
+        // Redirect to login section
+        showSection('login-section');
+         // Hide navbar links for logged-in sections
+        document.getElementById('nav-dashboard').style.display = 'none';
+        document.getElementById('user-info').style.display = 'none';
+        // Hide sidebar
+        document.getElementById('sidebarMenu').style.display = 'none';
     }
     // --- App Initialization ---
     async function initializeApp() {
@@ -1081,7 +1060,6 @@
             const user = usersData[userId] || {};
             const userName = user.firstName || user.username || 'Unknown User';
             const row = document.createElement('tr');
-            // আপডেট: Actions কলামে Reply এবং Clear Messages বাটন যোগ করা হয়েছে
             row.innerHTML = `
                 <td>${userId} (${userName})</td>
                 <td>${latestMsg.text.substring(0, 50)}${latestMsg.text.length > 50 ? '...' : ''}</td>
