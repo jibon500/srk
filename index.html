@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -106,8 +106,6 @@
     
     .user-active { color: #198754; font-weight: bold; }
     .user-blocked { color: #dc3545; font-weight: bold; }
-    .user-ad-active { color: #198754; font-weight: bold; }
-    .user-ad-inactive { color: #dc3545; font-weight: bold; }
     
     .withdraw-pending { color: #ffc107; font-weight: bold; }
     .withdraw-processing { color: #17a2b8; font-weight: bold; }
@@ -152,21 +150,6 @@
       font-size: .75rem;
       line-height: 1.5;
       border-radius: .2rem;
-    }
-    
-    /* --- New CSS for Ad Status Badge --- */
-    .ad-status-badge {
-      font-size: 0.7rem;
-      padding: 0.2em 0.4em;
-      border-radius: 0.25rem;
-    }
-    .bg-ad-active {
-      background-color: #d4edda !important; /* Light green */
-      color: #155724 !important; /* Dark green text */
-    }
-    .bg-ad-inactive {
-      background-color: #f8d7da !important; /* Light red */
-      color: #721c24 !important; /* Dark red text */
     }
   </style>
 </head>
@@ -271,7 +254,7 @@
           <!-- Search and Filter -->
           <div class="search-box">
             <div class="row g-2">
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <input type="text" id="user-search" class="form-control form-control-sm" placeholder="Search by username or ID..."> <!-- Smaller input -->
               </div>
               <div class="col-md-3">
@@ -281,16 +264,7 @@
                   <option value="blocked">Blocked</option>
                 </select>
               </div>
-              <!-- --- New Filter for Ad Status --- -->
               <div class="col-md-3">
-                <select id="user-ad-status-filter" class="form-control form-control-sm">
-                  <option value="all">All Ad Status</option>
-                  <option value="ad_active">Ad Active</option>
-                  <option value="ad_inactive">Ad Inactive</option>
-                </select>
-              </div>
-              <!-- --- End New Filter --- -->
-              <div class="col-md-2">
                 <button class="btn btn-primary btn-sm w-100" onclick="filterUsers()"> <!-- Smaller button -->
                   <i class="fas fa-filter me-1"></i>Filter
                 </button>
@@ -319,8 +293,6 @@
                       <th>Referrals</th>
                       <th>Ref Earn</th>
                       <th>Status</th>
-                      <th>Ad Status</th> <!-- --- New Column Header --- -->
-                      <th>Ads Today</th> <!-- --- New Column Header --- -->
                       <th>Created</th>
                       <th>Actions</th>
                     </tr>
@@ -429,27 +401,6 @@
                   </div>
                 </div>
               </div>
-              <!-- --- New Ad System Configuration Fields --- -->
-              <div class="row">
-                <div class="col-md-6 mb-2">
-                  <div class="mb-2">
-                    <label for="daily-ad-limit" class="form-label" style="font-size: 0.8rem;">Daily Ad Limit Per User</label>
-                    <input type="number" class="form-control form-control-sm" id="daily-ad-limit" value="10" min="0">
-                    <div class="form-text" style="font-size: 0.7rem;">Maximum ads a user can watch per 12-hour period</div>
-                  </div>
-                </div>
-                <div class="col-md-6 mb-2">
-                  <div class="mb-2">
-                    <label for="ad-system-status" class="form-label" style="font-size: 0.8rem;">Ad System Global Status</label>
-                    <select class="form-control form-control-sm" id="ad-system-status">
-                      <option value="true">Active</option>
-                      <option value="false">Inactive</option>
-                    </select>
-                    <div class="form-text" style="font-size: 0.7rem;">Controls if the entire ad system is active</div>
-                  </div>
-                </div>
-              </div>
-              <!-- --- End New Fields --- -->
               <button id="save-config-btn" class="btn btn-success btn-sm">
                 <i class="fas fa-save me-1"></i>Save Configuration
               </button>
@@ -478,16 +429,6 @@
             <label for="edit-user-balance" class="form-label">Balance ($)</label>
             <input type="number" step="0.01" class="form-control" id="edit-user-balance">
           </div>
-          <!-- --- New Ad Status Select Field --- -->
-          <div class="mb-3">
-            <label for="edit-user-ad-status" class="form-label">Ad Viewing Permission</label>
-            <select class="form-control" id="edit-user-ad-status">
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
-            <div class="form-text">Controls if this user can watch ads and earn coins.</div>
-          </div>
-          <!-- --- End New Field --- -->
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
@@ -637,11 +578,6 @@
           document.getElementById('referral-reward').value = config.referralReward || 10;
           document.getElementById('referral-claim-threshold').value = config.referralClaimThreshold || 200;
           document.getElementById('min-withdraw-amount').value = config.minWithdrawAmount || 5.00;
-          
-          // --- Load new ad system config fields ---
-          document.getElementById('daily-ad-limit').value = config.dailyAdLimitPerUser !== undefined ? config.dailyAdLimitPerUser : 10;
-          document.getElementById('ad-system-status').value = config.isAdSystemActive !== undefined ? config.isAdSystemActive : true;
-          // --- End new fields ---
         }
       }).catch((error) => {
         showToast(`Error loading config: ${error.message}`, 'danger');
@@ -657,29 +593,19 @@
       const referralClaimThreshold = parseInt(document.getElementById('referral-claim-threshold').value);
       const minWithdrawAmount = parseFloat(document.getElementById('min-withdraw-amount').value);
 
-      // --- Get new ad system config values ---
-      const dailyAdLimit = parseInt(document.getElementById('daily-ad-limit').value);
-      const isAdSystemActive = document.getElementById('ad-system-status').value === 'true';
-      // --- End new values ---
-
       if (isNaN(pointsPerAd) || isNaN(coinsForConversion) || isNaN(valuePerConversion) ||
-          isNaN(referralReward) || isNaN(referralClaimThreshold) || isNaN(minWithdrawAmount) ||
-          isNaN(dailyAdLimit)) { // Check dailyAdLimit too
+          isNaN(referralReward) || isNaN(referralClaimThreshold) || isNaN(minWithdrawAmount)) {
         showToast('Please enter valid numbers for all configuration fields.', 'warning');
         return;
       }
 
-      database.ref('appConfig').update({ // Use update instead of set to preserve other fields
+      database.ref('appConfig').set({
         pointsPerAd: pointsPerAd,
         coinsForConversion: coinsForConversion,
         valuePerConversion: valuePerConversion,
         referralReward: referralReward,
         referralClaimThreshold: referralClaimThreshold,
-        minWithdrawAmount: minWithdrawAmount,
-        // --- Save new ad system config fields ---
-        dailyAdLimitPerUser: dailyAdLimit,
-        isAdSystemActive: isAdSystemActive
-        // --- End new fields ---
+        minWithdrawAmount: minWithdrawAmount
       }).then(() => {
         showToast('Configuration saved successfully!', 'success');
       }).catch((error) => {
@@ -707,13 +633,10 @@
     function renderUsersTable() {
       usersTableBody.innerHTML = '';
       let userCount = 0;
-      let activeUserCount = 0; // Based on isBlocked
+      let activeUserCount = 0;
       
       const searchTerm = document.getElementById('user-search').value.toLowerCase();
       const statusFilter = document.getElementById('user-status-filter').value;
-      // --- Get new ad status filter ---
-      const adStatusFilter = document.getElementById('user-ad-status-filter').value;
-      // --- End new filter ---
 
       Object.keys(allUsers).forEach(userId => {
         const user = allUsers[userId];
@@ -735,26 +658,10 @@
           }
         }
         
-        // --- Apply new ad status filter ---
-        if (adStatusFilter !== 'all') {
-          const userAdStatus = user.adStatus || 'Active'; // Default to Active if not set
-          if ((adStatusFilter === 'ad_active' && userAdStatus !== 'Active') || 
-              (adStatusFilter === 'ad_inactive' && userAdStatus !== 'Inactive')) {
-            return; // Skip this user
-          }
-        }
-        // --- End new filter ---
-        
         userCount++;
-        if (!user.isBlocked) activeUserCount++; // Count based on isBlocked
+        if (!user.isBlocked) activeUserCount++;
         
         const row = document.createElement('tr');
-        // --- Determine ad status display and badge class ---
-        const userAdStatus = user.adStatus || 'Active';
-        const adStatusBadgeClass = userAdStatus === 'Active' ? 'bg-ad-active' : 'bg-ad-inactive';
-        const adStatusDisplay = userAdStatus === 'Active' ? 'Ad Active' : 'Ad Inactive';
-        // --- End determination ---
-        
         row.innerHTML = `
           <td>${userId.substring(0, 6)}...</td>
           <td>${user.username || 'N/A'}</td>
@@ -769,12 +676,6 @@
               ${user.isBlocked ? 'Blocked' : 'Active'}
             </span>
           </td>
-          <!-- --- Display new Ad Status and Ads Today columns --- -->
-          <td>
-            <span class="ad-status-badge ${adStatusBadgeClass}">${adStatusDisplay}</span>
-          </td>
-          <td>${user.adsWatchedToday || 0}</td>
-          <!-- --- End new columns --- -->
           <td>${new Date(user.createdAt).toLocaleDateString()}</td>
           <td>
             <button class="btn btn-sm btn-${user.isBlocked ? 'success' : 'warning'} action-btn" 
@@ -793,10 +694,7 @@
 
       usersCountSpan.textContent = `Total: ${userCount}`;
       totalUsersElement.textContent = userCount;
-      // --- Update active users count to reflect admin-set ad status if needed, or keep as is ---
-      // For simplicity, keeping it as blocked/unblocked count. You can modify logic here if needed.
-      activeUsersElement.textContent = activeUserCount; 
-      // --- End update ---
+      activeUsersElement.textContent = activeUserCount;
     }
 
     // Toggle user block status
@@ -822,11 +720,6 @@
       document.getElementById('edit-user-coins').value = user.points || 0;
       document.getElementById('edit-user-balance').value = (user.balance || 0).toFixed(2);
       
-      // --- Set the ad status in the modal ---
-      const adStatusSelect = document.getElementById('edit-user-ad-status');
-      adStatusSelect.value = user.adStatus || 'Active'; // Default to Active
-      // --- End setting ad status ---
-      
       const modal = new bootstrap.Modal(document.getElementById('userEditModal'));
       modal.show();
     }
@@ -837,9 +730,6 @@
       
       const coins = parseInt(document.getElementById('edit-user-coins').value);
       const balance = parseFloat(document.getElementById('edit-user-balance').value);
-      // --- Get the ad status from the modal ---
-      const adStatus = document.getElementById('edit-user-ad-status').value;
-      // --- End getting ad status ---
       
       if (isNaN(coins) || isNaN(balance)) {
         showToast('Please enter valid numbers for coins and balance.', 'warning');
@@ -848,10 +738,7 @@
       
       database.ref('users/' + currentUserEditId).update({
         points: coins,
-        balance: balance,
-        // --- Update the ad status ---
-        adStatus: adStatus
-        // --- End updating ad status ---
+        balance: balance
       }).then(() => {
         showToast('User data updated successfully!', 'success');
         const modal = bootstrap.Modal.getInstance(document.getElementById('userEditModal'));
@@ -1039,12 +926,6 @@
       if (userStatusFilter) {
         userStatusFilter.addEventListener('change', filterUsers);
       }
-      // --- Set up new ad status filter listener ---
-      const userAdStatusFilter = document.getElementById('user-ad-status-filter');
-      if (userAdStatusFilter) {
-        userAdStatusFilter.addEventListener('change', filterUsers);
-      }
-      // --- End new listener ---
     });
 
     // Make functions available globally for inline event handlers
