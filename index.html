@@ -1,5 +1,4 @@
 
-
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -101,15 +100,15 @@
             word-wrap: break-word;
             font-size: 15px; /* Increased font size */
         }
-        .sent-message {
+        .sent-message { /* Admin messages */
             background-color: #007bff; /* Bootstrap primary color */
             color: white;
-            margin-left: auto; /* Align right */
+            margin-left: auto; /* Align right for admin */
         }
-        .received-message {
+        .received-message { /* User messages */
             background-color: #e9ecef; /* Bootstrap light color */
             color: #212529; /* Bootstrap dark color */
-            margin-right: auto; /* Align left */
+            margin-right: auto; /* Align left for user */
         }
         /* --- End Update --- */
     </style>
@@ -405,9 +404,6 @@
                                 <th>Latest Message</th>
                                 <th>Timestamp</th>
                                 <th>Actions</th>
-                                <!-- --- Update: Added Clear Chat Column Header --- -->
-                                <th>Clear Chat</th>
-                                <!-- --- End Update --- -->
                             </tr>
                         </thead>
                         <tbody id="messages-table-body">
@@ -591,7 +587,7 @@
         } else if (sectionId === 'withdrawals-section') {
             loadWithdrawals();
         } else if (sectionId === 'messages-section') {
-            loadUserMessages();
+            loadUserMessages(); // Load messages when this section is shown
         } else if (sectionId === 'notices-section') {
             loadNotices();
         } else if (sectionId === 'dashboard-section') {
@@ -648,10 +644,7 @@
                 const errorCode = error.code;
                 const errorMessage = error.message;
                 console.error("Login error:", errorCode, errorMessage);
-                // Handle specific errors
-                if (errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password') {
-                    errorDiv.textContent = 'Invalid email or password.';
-                } else if (errorMessage.includes('Unauthorized access')) {
+                if (errorMessage.includes('Unauthorized access')) {
                     errorDiv.textContent = 'Access denied. You are not authorized as an admin.';
                 } else {
                     errorDiv.textContent = errorMessage;
@@ -659,6 +652,7 @@
                 errorDiv.style.display = 'block';
             });
     }
+
 
     function logout() {
         auth.signOut().then(() => {
@@ -675,20 +669,6 @@
             showToast('Error', 'Failed to logout.', true);
         });
     }
-
-    // Listen for auth state changes to handle logout/login
-    auth.onAuthStateChanged((user) => {
-        if (!user) {
-            // User is signed out
-            document.getElementById('user-info').style.display = 'none';
-            document.getElementById('nav-dashboard').style.display = 'none';
-            document.getElementById('sidebarMenu').style.display = 'none';
-            // Show login section if not already shown
-            if (!document.getElementById('login-section').classList.contains('active')) {
-                showSection('login-section');
-            }
-        }
-    });
 
     // --- App Initialization ---
     async function initializeApp() {
@@ -834,6 +814,7 @@
             showLoading(false);
         }
     }
+
 
     // --- Dashboard Updates ---
     function updateDashboardStats() {
@@ -1157,9 +1138,7 @@
         );
 
         if (sortedMessages.length === 0) {
-            // --- Update: Adjust colspan to 5 if Clear Chat column is added --->
-            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No user messages found.</td></tr>';
-            // --- End Update ---
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No user messages found.</td></tr>';
             return;
         }
 
@@ -1170,7 +1149,6 @@
             const userName = user.firstName || user.username || 'Unknown User';
 
             const row = document.createElement('tr');
-            // --- Update: Added Clear Chat cell --->
             row.innerHTML = `
                 <td>${userId} (${userName})</td>
                 <td>${latestMsg.text.substring(0, 50)}${latestMsg.text.length > 50 ? '...' : ''}</td>
@@ -1178,53 +1156,10 @@
                 <td>
                     <button class="btn btn-sm btn-outline-primary action-btn" onclick="openMessageReplyModal('${userId}')"><i class="fas fa-reply"></i> Reply</button>
                 </td>
-                <td>
-                    <button class="btn btn-sm btn-outline-danger action-btn" onclick="clearUserChat('${userId}')"><i class="fas fa-trash"></i> Clear Chat</button>
-                </td>
             `;
-            // --- End Update ---
             tableBody.appendChild(row);
         });
     }
-
-    // --- Update: New function to clear user chat --->
-    async function clearUserChat(userId) {
-        if (!confirm(`Are you sure you want to clear ALL messages for user ${userId}? This action cannot be undone.`)) {
-            return;
-        }
-
-        try {
-            // Reference to the user's adminMessages node
-            const userMessagesRef = database.ref(`users/${userId}/adminMessages`);
-
-            // Remove all messages under this node
-            await userMessagesRef.remove();
-
-            console.log(`All messages cleared for user: ${userId}`);
-            showToast('Success', `All messages cleared for user ${userId}.`);
-
-            // Optional: Reload the messages table to reflect the change
-            // This depends on how messagesData is managed. If it's solely from Firebase,
-            // removing the entry from messagesData and re-rendering is sufficient.
-            // If messagesData is cached locally, you might need to remove it from there too.
-            // For simplicity, we'll reload the entire messages section.
-            // A more efficient way would be to update messagesData and re-render just that row.
-            if (document.getElementById('messages-section').classList.contains('active')) {
-                 loadUserMessages(); // Reload messages if the section is active
-            }
-
-            // Alternatively, update messagesData and re-render the table:
-            // if (messagesData[userId]) {
-            //     delete messagesData[userId];
-            //     renderMessagesTable(); // Re-render the table without reloading from Firebase
-            // }
-
-        } catch (error) {
-            console.error("Error clearing user chat:", error);
-            showToast('Error', `Failed to clear messages for user ${userId}. Please try again.`, true);
-        }
-    }
-    // --- End Update ---
 
     function openMessageReplyModal(userId) {
         currentReplyUserId = userId;
@@ -1289,13 +1224,12 @@
         // --- Update: Create message elements and append them correctly ---
         historyDiv.innerHTML = ''; // Clear previous content
         messages.forEach(msg => {
-            const isSent = msg.sender === 'admin'; // Check sender
-            const bubbleClass = isSent ? 'sent-message' : 'received-message'; // Apply correct class
-            const alignStyle = isSent ? 'margin-left: auto;' : 'margin-right: auto;'; // Apply alignment style
+            const isUser = msg.sender === 'user'; // Check sender
+            const bubbleClass = isUser ? 'received-message' : 'sent-message'; // Apply correct class
 
             const messageDiv = document.createElement('div');
             messageDiv.className = `message-bubble ${bubbleClass}`;
-            messageDiv.style.cssText = alignStyle; // Apply alignment style
+
             messageDiv.innerHTML = `
                 ${msg.text}
                 <br><small>${new Date(msg.timestamp).toLocaleTimeString()}</small>
@@ -1327,6 +1261,7 @@
         });
     }
 
+    // --- Fix: Corrected sendReplyMessage function ---
     async function sendReplyMessage() {
         const userId = document.getElementById('reply-user-id').value;
         const input = document.getElementById('reply-message-input');
@@ -1337,39 +1272,36 @@
             return;
         }
 
-        if (!auth.currentUser) {
-            showToast('Error', 'You must be logged in to send a message.', true);
-            return;
-        }
-
+        // --- Fix: Prepare message data correctly ---
         const messageData = {
-            sender: 'admin', // Mark message as from admin
+            sender: 'admin', // <<--- IMPORTANT: Mark message as from admin
             text: messageText,
             timestamp: new Date().toISOString()
         };
+        // --- End Fix ---
 
         try {
+            // --- Fix: Push message to the correct Firebase path for the specific user ---
             await database.ref(`users/${userId}/adminMessages`).push(messageData);
+            // --- End Fix ---
             console.log("Reply message sent to Firebase for user:", userId);
             input.value = ''; // Clear input
             // The UI will update automatically via the listener
-            // Optionally, scroll to bottom again after sending
-             const historyDiv = document.getElementById('reply-message-history');
-             historyDiv.scrollTop = historyDiv.scrollHeight;
         } catch (error) {
             console.error("Error sending reply message:", error);
             showToast('Error', 'Failed to send reply message. Please try again.', true);
         }
     }
+    // --- End Fix ---
 
-    // Attach sendReplyMessage to the button click
+    // Attach sendReplyMessage to the button click and Enter key
     document.getElementById('send-reply-message').addEventListener('click', sendReplyMessage);
-    // Also allow sending with Enter key in the input
     document.getElementById('reply-message-input').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             sendReplyMessage();
         }
     });
+
 
     // --- Notices Management ---
     function renderNoticesTable() {
@@ -1459,39 +1391,41 @@
         }
     }
 
-    // --- Cleanup ---
-    window.addEventListener('beforeunload', () => {
-        // Remove the reply messages listener if it exists
-        if (replyMessagesListener && window.lastListenedUserId) {
-             try {
-                const oldRef = database.ref(`users/${window.lastListenedUserId}/adminMessages`);
-                oldRef.off('value', window.lastReplyMessagesListener);
-             } catch (e) {
-                 console.warn("Could not remove message listener on unload:", e);
-             }
-             replyMessagesListener = null;
-             window.lastListenedUserId = null;
-             window.lastReplyMessagesListener = null;
-        }
-    });
-
-    // Also remove listener when the message reply modal is hidden
+    // --- Cleanup listener on modal close and window unload ---
     document.getElementById('messageReplyModal').addEventListener('hidden.bs.modal', function () {
+        // Remove the specific listener when the modal is closed
         if (replyMessagesListener && window.lastListenedUserId) {
-             try {
+            try {
                 const oldRef = database.ref(`users/${window.lastListenedUserId}/adminMessages`);
                 oldRef.off('value', window.lastReplyMessagesListener);
-             } catch (e) {
-                 console.warn("Could not remove message listener on modal close:", e);
-             }
-             replyMessagesListener = null;
-             window.lastListenedUserId = null;
-             window.lastReplyMessagesListener = null;
+            } catch (e) {
+                console.warn("Could not remove message listener on modal close:", e);
+            }
+            replyMessagesListener = null;
+            window.lastListenedUserId = null;
+            window.lastReplyMessagesListener = null;
         }
         currentReplyUserId = null; // Clear current user ID
+    });
+
+    window.addEventListener('beforeunload', () => {
+       // General cleanup for other listeners (existing code)
+        // ... (code for userBlockedListener, withdrawHistoryListener etc. - omitted for brevity)
+        // Specific cleanup for the message reply listener
+        if (replyMessagesListener && window.lastListenedUserId) {
+            try {
+                const oldRef = database.ref(`users/${window.lastListenedUserId}/adminMessages`);
+                oldRef.off('value', window.lastReplyMessagesListener);
+            } catch (e) {
+                console.warn("Could not remove message listener on unload:", e);
+            }
+            replyMessagesListener = null;
+            window.lastListenedUserId = null;
+            window.lastReplyMessagesListener = null;
+        }
+        currentReplyUserId = null;
     });
 
 </script>
 </body>
 </html>
-```
