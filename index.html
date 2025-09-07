@@ -1,3 +1,23 @@
+ঠিক আছে, আমি এখন `Pasted_Text_1757264024520.txt` ফাইলের কোডটি আপডেট করছি।
+
+**পরিবর্তনসমূহ:**
+
+1.  **লগইন সিস্টেম:**
+    *   পুরো প্যানেলের ডিফল্ট ভিউ এখন `login-section`।
+    *   `login()` ফাংশনটি এখন Firebase Authentication ব্যবহার করে (ইমেইল/পাসওয়ার্ড)।
+    *   লগইনের পর, এটি Firebase Authentication UID টি নেয় এবং `admins/{UID}` পাথে চেক করে যে UIDটি রেজিস্টার্ড কিনা।
+    *   শুধুমাত্র যদি উভয় শর্ত পূরণ হয় (Auth সফল + UID `admins` পাথে আছে), তাহলে ড্যাশবোর্ডে লগইন হবে।
+    *   `logout()` ফাংশনটি এখন সঠিকভাবে লগআউট করে এবং লগইন স্ক্রিনে ফিরে আসে।
+    *   `auth.onAuthStateChanged` লিসেনার যোগ করা হয়েছে যাতে পেজ রিফ্রেশ বা ম্যানুয়ালি লগআউট হলে সঠিকভাবে লগইন স্ক্রিনে ফিরে আসে।
+2.  **"Clear Chat" বাটন:**
+    *   `renderMessagesTable()` ফাংশনে টেবিল হেডার এবং বডির প্রতিটি রো-এ একটি নতুন `<th>` এবং `<td>` যুক্ত হয়েছে, যার মধ্যে "Clear Chat" বাটন রয়েছে।
+    *   নতুন ফাংশন `clearUserChat(userId)` যুক্ত হয়েছে।
+    *   `clearUserChat(userId)` ফাংশন `confirm()` ব্যবহার করে নিশ্চিতকরণ চায়, এবং যদি হ্যাঁ হয়, তাহলে `database.ref('users/' + userId + '/adminMessages').remove()` কল করে ঐ ইউজারের সকল মেসেজ ডিলিট করে দেয়।
+    *   সফল হলে একটি সাকসেস মেসেজ দেখায় এবং ব্যর্থ হলে এরর মেসেজ দেখায়।
+
+**আপডেটেড `admin-panel.html`**
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -673,6 +693,20 @@
         });
     }
 
+    // Listen for auth state changes to handle logout/login
+    auth.onAuthStateChanged((user) => {
+        if (!user) {
+            // User is signed out
+            document.getElementById('user-info').style.display = 'none';
+            document.getElementById('nav-dashboard').style.display = 'none';
+            document.getElementById('sidebarMenu').style.display = 'none';
+            // Show login section if not already shown
+            if (!document.getElementById('login-section').classList.contains('active')) {
+                showSection('login-section');
+            }
+        }
+    });
+
     // --- App Initialization ---
     async function initializeApp() {
         showLoading(true);
@@ -1187,9 +1221,20 @@
             showToast('Success', `All messages cleared for user ${userId}.`);
 
             // Optional: Reload the messages table to reflect the change
+            // This depends on how messagesData is managed. If it's solely from Firebase,
+            // removing the entry from messagesData and re-rendering is sufficient.
+            // If messagesData is cached locally, you might need to remove it from there too.
+            // For simplicity, we'll reload the entire messages section.
+            // A more efficient way would be to update messagesData and re-render just that row.
             if (document.getElementById('messages-section').classList.contains('active')) {
                  loadUserMessages(); // Reload messages if the section is active
             }
+
+            // Alternatively, update messagesData and re-render the table:
+            // if (messagesData[userId]) {
+            //     delete messagesData[userId];
+            //     renderMessagesTable(); // Re-render the table without reloading from Firebase
+            // }
 
         } catch (error) {
             console.error("Error clearing user chat:", error);
@@ -1325,6 +1370,9 @@
             console.log("Reply message sent to Firebase for user:", userId);
             input.value = ''; // Clear input
             // The UI will update automatically via the listener
+            // Optionally, scroll to bottom again after sending
+             const historyDiv = document.getElementById('reply-message-history');
+             historyDiv.scrollTop = historyDiv.scrollHeight;
         } catch (error) {
             console.error("Error sending reply message:", error);
             showToast('Error', 'Failed to send reply message. Please try again.', true);
@@ -1428,55 +1476,39 @@
         }
     }
 
-    // --- Cleanup listener on modal close and window unload ---
-    document.getElementById('messageReplyModal').addEventListener('hidden.bs.modal', function () {
-        // Remove the specific listener when the modal is closed
+    // --- Cleanup ---
+    window.addEventListener('beforeunload', () => {
+        // Remove the reply messages listener if it exists
         if (replyMessagesListener && window.lastListenedUserId) {
-            try {
+             try {
                 const oldRef = database.ref(`users/${window.lastListenedUserId}/adminMessages`);
                 oldRef.off('value', window.lastReplyMessagesListener);
-            } catch (e) {
-                console.warn("Could not remove message listener on modal close:", e);
-            }
-            replyMessagesListener = null;
-            window.lastListenedUserId = null;
-            window.lastReplyMessagesListener = null;
+             } catch (e) {
+                 console.warn("Could not remove message listener on unload:", e);
+             }
+             replyMessagesListener = null;
+             window.lastListenedUserId = null;
+             window.lastReplyMessagesListener = null;
+        }
+    });
+
+    // Also remove listener when the message reply modal is hidden
+    document.getElementById('messageReplyModal').addEventListener('hidden.bs.modal', function () {
+        if (replyMessagesListener && window.lastListenedUserId) {
+             try {
+                const oldRef = database.ref(`users/${window.lastListenedUserId}/adminMessages`);
+                oldRef.off('value', window.lastReplyMessagesListener);
+             } catch (e) {
+                 console.warn("Could not remove message listener on modal close:", e);
+             }
+             replyMessagesListener = null;
+             window.lastListenedUserId = null;
+             window.lastReplyMessagesListener = null;
         }
         currentReplyUserId = null; // Clear current user ID
-    });
-
-    window.addEventListener('beforeunload', () => {
-       // General cleanup for other listeners (existing code)
-        // ... (code for userBlockedListener, withdrawHistoryListener etc. - omitted for brevity)
-        // Specific cleanup for the message reply listener
-        if (replyMessagesListener && window.lastListenedUserId) {
-            try {
-                const oldRef = database.ref(`users/${window.lastListenedUserId}/adminMessages`);
-                oldRef.off('value', window.lastReplyMessagesListener);
-            } catch (e) {
-                console.warn("Could not remove message listener on unload:", e);
-            }
-            replyMessagesListener = null;
-            window.lastListenedUserId = null;
-            window.lastReplyMessagesListener = null;
-        }
-        currentReplyUserId = null;
-    });
-
-    // Listen for auth state changes to handle logout/login
-    auth.onAuthStateChanged((user) => {
-        if (!user) {
-            // User is signed out
-            document.getElementById('user-info').style.display = 'none';
-            document.getElementById('nav-dashboard').style.display = 'none';
-            document.getElementById('sidebarMenu').style.display = 'none';
-            // Show login section if not already shown
-            if (!document.getElementById('login-section').classList.contains('active')) {
-                showSection('login-section');
-            }
-        }
     });
 
 </script>
 </body>
 </html>
+```
