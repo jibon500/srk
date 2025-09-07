@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,7 +11,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <!-- Removed Firebase Auth SDK as it's no longer needed -->
+    <!-- Removed Firebase Auth as it's not needed for UID-only login -->
     <style>
         body {
             padding-top: 60px; /* Space for fixed navbar */
@@ -319,40 +318,49 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="pointsPerAd" class="form-label">Points Per Ad</label>
-                            <input type="number" class="form-control" id="pointsPerAd" required>
+                            <!-- Added 'name' attribute -->
+                            <input type="number" class="form-control" id="pointsPerAd" name="pointsPerAd" required>
                         </div>
                         <div class="col-md-6">
                             <label for="coinsForConversion" class="form-label">Coins for Conversion</label>
-                            <input type="number" class="form-control" id="coinsForConversion" required>
+                            <!-- Added 'name' attribute -->
+                            <input type="number" class="form-control" id="coinsForConversion" name="coinsForConversion" required>
                         </div>
                         <div class="col-md-6">
                             <label for="valuePerConversion" class="form-label">Value Per Conversion ($)</label>
-                            <input type="number" class="form-control" id="valuePerConversion" step="0.01" required>
+                            <!-- Added 'name' attribute -->
+                            <input type="number" class="form-control" id="valuePerConversion" name="valuePerConversion" step="0.01" required>
                         </div>
                         <div class="col-md-6">
                             <label for="referralRewardCoins" class="form-label">Referral Reward Coins</label>
-                            <input type="number" class="form-control" id="referralRewardCoins" required>
+                            <!-- Added 'name' attribute -->
+                            <input type="number" class="form-control" id="referralRewardCoins" name="referralRewardCoins" required>
                         </div>
                         <div class="col-md-6">
                             <label for="referralClaimThreshold" class="form-label">Referral Claim Threshold</label>
-                            <input type="number" class="form-control" id="referralClaimThreshold" required>
+                            <!-- Added 'name' attribute -->
+                            <input type="number" class="form-control" id="referralClaimThreshold" name="referralClaimThreshold" required>
                         </div>
                         <div class="col-md-6">
                             <label for="minWithdrawAmount" class="form-label">Min Withdraw Amount ($)</label>
-                            <input type="number" class="form-control" id="minWithdrawAmount" step="0.01" required>
+                            <!-- Added 'name' attribute -->
+                            <input type="number" class="form-control" id="minWithdrawAmount" name="minWithdrawAmount" step="0.01" required>
                         </div>
                         <div class="col-md-6">
                             <label for="dailyAdLimitPerUser" class="form-label">Daily Ad Limit Per User</label>
-                            <input type="number" class="form-control" id="dailyAdLimitPerUser" required>
+                            <!-- Added 'name' attribute -->
+                            <input type="number" class="form-control" id="dailyAdLimitPerUser" name="dailyAdLimitPerUser" required>
                         </div>
                         <div class="col-md-6">
                             <label for="resetTimerHours" class="form-label">Reset Timer (Hours)</label>
-                            <input type="number" class="form-control" id="resetTimerHours" min="1" required>
+                            <!-- Added 'name' attribute -->
+                            <input type="number" class="form-control" id="resetTimerHours" name="resetTimerHours" min="1" required>
                             <div class="form-text">Number of hours after which the daily ad counter resets for each user.</div>
                         </div>
                         <div class="col-md-6">
                             <label for="isAdSystemActive" class="form-label">Ad System Status</label>
-                            <select class="form-select" id="isAdSystemActive">
+                            <!-- Added 'name' attribute -->
+                            <select class="form-select" id="isAdSystemActive" name="isAdSystemActive">
                                 <option value="true">Active</option>
                                 <option value="false">Inactive</option>
                             </select>
@@ -914,29 +922,63 @@
         document.getElementById('resetTimerHours').value = appConfig.resetTimerHours || '12'; // Default to 12 if not set
         document.getElementById('isAdSystemActive').value = appConfig.isAdSystemActive !== undefined ? appConfig.isAdSystemActive.toString() : 'true';
     }
+
+    // --- Updated saveAppConfig function ---
     async function saveAppConfig() {
-        const formData = new FormData(document.getElementById('app-config-form'));
+        // Get the form element
+        const form = document.getElementById('app-config-form');
+        
+        // Create a new FormData object from the form
+        const formData = new FormData(form);
+        
+        // Prepare the config object to be saved
         const newConfig = {};
+
+        // Iterate through the form data entries
         for (const [key, value] of formData.entries()) {
+            // Convert values based on their expected types
             if (key === 'isAdSystemActive') {
+                // Convert string 'true'/'false' to boolean
                 newConfig[key] = value === 'true';
             } else if (key === 'valuePerConversion' || key === 'minWithdrawAmount') {
+                // Convert to float for currency values
                 newConfig[key] = parseFloat(value);
             } else {
+                // Convert to integer for other numeric values
                 newConfig[key] = parseInt(value);
             }
+            
+            // Basic validation: Check if conversion was successful
+            if (isNaN(newConfig[key])) {
+                 showToast('Error', `Invalid value for ${key}. Please check the input.`, true);
+                 return; // Stop execution if validation fails
+            }
         }
+
         try {
+            // Update the configuration in Firebase
             await database.ref('appConfig').update(newConfig);
-            // Update local state with the new config, ensuring resetTimerHours is included
+            
+            // Update the local appConfig state with the new values
+            // Ensure resetTimerHours is included if it was in the form data
             appConfig = { ...appConfig, ...newConfig };
+            
+            // Show success message
             showToast('Success', 'App configuration saved successfully.');
-            updateDashboardStats(); // Refresh dashboard stats
+            
+            // Update the dashboard stats to reflect the new configuration
+            updateDashboardStats();
+            
         } catch (error) {
+            // Log the error for debugging
             console.error("Failed to save app config:", error);
-            showToast('Error', 'Failed to save app configuration.', true);
+            
+            // Show error message to the user
+            showToast('Error', 'Failed to save app configuration. Please try again.', true);
         }
     }
+    // --- End of Updated saveAppConfig function ---
+
     // --- Users Management ---
     function renderUsersTable(filter = '') {
         const tableBody = document.getElementById('users-table-body');
@@ -1440,4 +1482,3 @@
 </script>
 </body>
 </html>
-```
