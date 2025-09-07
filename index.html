@@ -184,6 +184,18 @@
                 App Settings
               </a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onclick="showSection('ad-settings')">
+                <i class="fas fa-ad me-2"></i>
+                Ad Settings
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onclick="showSection('messages')">
+                <i class="fas fa-comments me-2"></i>
+                User Messages
+              </a>
+            </li>
           </ul>
         </div>
       </nav>
@@ -407,6 +419,102 @@
             </div>
           </div>
         </div>
+
+        <!-- Ad Settings Section -->
+        <div id="ad-settings-section" class="section-content" style="display: none;">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-2 mb-2 border-bottom">
+            <h1 class="h3">Ad Settings</h1>
+          </div>
+
+          <!-- Daily Ad Limit Card -->
+          <div class="card mb-3">
+            <div class="card-header p-2">
+              <h6 class="card-title mb-0">Daily Ad Configuration</h6>
+            </div>
+            <div class="card-body p-2">
+              <div class="row">
+                <div class="col-md-6 mb-2">
+                  <div class="mb-2">
+                    <label for="daily-ad-limit" class="form-label" style="font-size: 0.8rem;">Daily Ad Limit</label>
+                    <input type="number" class="form-control form-control-sm" id="daily-ad-limit" value="10">
+                    <div class="form-text" style="font-size: 0.7rem;">Number of ads each user can view per day</div>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="mb-2">
+                    <label for="ad-type-duration" class="form-label" style="font-size: 0.8rem;">Ad Type Duration (Hours)</label>
+                    <input type="number" class="form-control form-control-sm" id="ad-type-duration" value="12">
+                    <div class="form-text" style="font-size: 0.7rem;">Duration for which an ad is active (in hours)</div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-2">
+                  <div class="mb-2">
+                    <label for="ad-status" class="form-label" style="font-size: 0.8rem;">Ad System Status</label>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" id="ad-status" checked>
+                      <label class="form-check-label" for="ad-status" style="font-size: 0.8rem;">Active</label>
+                    </div>
+                    <div class="form-text" style="font-size: 0.7rem;">Enable or disable the entire ad system</div>
+                  </div>
+                </div>
+              </div>
+              <button id="save-ad-settings-btn" class="btn btn-success btn-sm">
+                <i class="fas fa-save me-1"></i>Save Ad Settings
+              </button>
+            </div>
+          </div>
+
+          <!-- Global Notice Card -->
+          <div class="card">
+            <div class="card-header p-2">
+              <h6 class="card-title mb-0">Global Notice</h6>
+            </div>
+            <div class="card-body p-2">
+              <div class="mb-2">
+                <label for="global-notice" class="form-label" style="font-size: 0.8rem;">Important Notice</label>
+                <textarea class="form-control form-control-sm" id="global-notice" rows="3" placeholder="Enter global notice for all users..."></textarea>
+                <div class="form-text" style="font-size: 0.7rem;">This notice will be displayed to all users in the app</div>
+              </div>
+              <button id="save-notice-btn" class="btn btn-success btn-sm">
+                <i class="fas fa-save me-1"></i>Save Notice
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Messages Section -->
+        <div id="messages-section" class="section-content" style="display: none;">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-2 mb-2 border-bottom">
+            <h1 class="h3">User Messages</h1>
+          </div>
+
+          <!-- Messages Table -->
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center p-2">
+              <h6 class="card-title mb-0">Global Chat Messages</h6>
+            </div>
+            <div class="card-body p-2">
+              <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                  <thead class="table-light">
+                    <tr>
+                      <th>User ID</th>
+                      <th>Username</th>
+                      <th>Message</th>
+                      <th>Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="messages-table-body">
+                    <!-- Message rows will be populated here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   </div>
@@ -468,6 +576,29 @@
     </div>
   </div>
 
+  <!-- Reply Message Modal -->
+  <div class="modal fade" id="replyMessageModal" tabindex="-1" aria-labelledby="replyMessageModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="replyMessageModalLabel">Reply to User</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="reply-user-id">
+          <div class="mb-3">
+            <label for="reply-message" class="form-label">Your Reply</label>
+            <textarea class="form-control" id="reply-message" rows="3" placeholder="Enter your reply..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="sendReply()">Send Reply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div class="toast-container position-fixed bottom-0 end-0 p-2">
     <div id="live-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
@@ -508,11 +639,14 @@
       dashboard: document.getElementById('dashboard-section'),
       users: document.getElementById('users-section'),
       withdrawals: document.getElementById('withdrawals-section'),
-      settings: document.getElementById('settings-section')
+      settings: document.getElementById('settings-section'),
+      adSettings: document.getElementById('ad-settings-section'),
+      messages: document.getElementById('messages-section')
     };
 
     const usersTableBody = document.getElementById('users-table-body');
     const withdrawalsTableBody = document.getElementById('withdrawals-table-body');
+    const messagesTableBody = document.getElementById('messages-table-body');
     const usersCountSpan = document.getElementById('users-count');
     const pendingRequestsCountSpan = document.getElementById('pending-requests-count');
     const totalUsersElement = document.getElementById('total-users');
@@ -520,6 +654,8 @@
     const pendingWithdrawalsElement = document.getElementById('pending-withdrawals');
     const totalRevenueElement = document.getElementById('total-revenue');
     const saveConfigBtn = document.getElementById('save-config-btn');
+    const saveAdSettingsBtn = document.getElementById('save-ad-settings-btn');
+    const saveNoticeBtn = document.getElementById('save-notice-btn');
     const toastElement = document.getElementById('live-toast');
     const toast = new bootstrap.Toast(toastElement);
     const toastBody = document.getElementById('toast-body');
@@ -527,10 +663,12 @@
     // State variables
     let allUsers = {};
     let allWithdrawRequests = {};
+    let allMessages = {};
     let currentUserEditId = null;
     let currentEditUserId = null;
     let currentEditRequestKey = null;
     let currentEditStatus = null;
+    let currentReplyUserId = null;
 
     // Show section function
     function showSection(sectionId) {
@@ -561,6 +699,10 @@
         loadWithdrawRequests();
       } else if (sectionId === 'settings') {
         loadAppConfig();
+      } else if (sectionId === 'ad-settings') {
+        loadAdSettings();
+      } else if (sectionId === 'messages') {
+        loadUserMessages();
       } else if (sectionId === 'dashboard') {
         // Dashboard stats are updated by other sections
         updateDashboardStats();
@@ -610,6 +752,62 @@
         showToast('Configuration saved successfully!', 'success');
       }).catch((error) => {
         showToast(`Error saving config: ${error.message}`, 'danger');
+      });
+    });
+
+    // Load ad settings
+    function loadAdSettings() {
+      database.ref('adSettings').once('value').then((snapshot) => {
+        const settings = snapshot.val();
+        if (settings) {
+          document.getElementById('daily-ad-limit').value = settings.dailyAdLimit || 10;
+          document.getElementById('ad-type-duration').value = settings.adTypeDuration || 12;
+          document.getElementById('ad-status').checked = settings.adStatus !== false; // Default to true if not set
+        }
+      }).catch((error) => {
+        showToast(`Error loading ad settings: ${error.message}`, 'danger');
+      });
+
+      database.ref('globalNotice').once('value').then((snapshot) => {
+        const notice = snapshot.val();
+        if (notice) {
+          document.getElementById('global-notice').value = notice;
+        }
+      }).catch((error) => {
+        showToast(`Error loading global notice: ${error.message}`, 'danger');
+      });
+    }
+
+    // Save ad settings
+    saveAdSettingsBtn.addEventListener('click', () => {
+      const dailyAdLimit = parseInt(document.getElementById('daily-ad-limit').value);
+      const adTypeDuration = parseInt(document.getElementById('ad-type-duration').value);
+      const adStatus = document.getElementById('ad-status').checked;
+
+      if (isNaN(dailyAdLimit) || isNaN(adTypeDuration)) {
+        showToast('Please enter valid numbers for ad settings.', 'warning');
+        return;
+      }
+
+      database.ref('adSettings').set({
+        dailyAdLimit: dailyAdLimit,
+        adTypeDuration: adTypeDuration,
+        adStatus: adStatus
+      }).then(() => {
+        showToast('Ad settings saved successfully!', 'success');
+      }).catch((error) => {
+        showToast(`Error saving ad settings: ${error.message}`, 'danger');
+      });
+    });
+
+    // Save global notice
+    saveNoticeBtn.addEventListener('click', () => {
+      const globalNotice = document.getElementById('global-notice').value;
+
+      database.ref('globalNotice').set(globalNotice).then(() => {
+        showToast('Global notice saved successfully!', 'success');
+      }).catch((error) => {
+        showToast(`Error saving global notice: ${error.message}`, 'danger');
       });
     });
 
@@ -886,6 +1084,94 @@
       });
     }
 
+    // Load user messages
+    function loadUserMessages() {
+      database.ref('users').on('value', (snapshot) => {
+        const users = snapshot.val() || {};
+        allMessages = {};
+        
+        // Collect all chat messages
+        Object.keys(users).forEach(userId => {
+          const user = users[userId];
+          if (user.chatHistory) {
+            Object.keys(user.chatHistory).forEach(messageId => {
+              const message = user.chatHistory[messageId];
+              allMessages[`${userId}_${messageId}`] = {
+                ...message,
+                userId: userId,
+                username: user.username || user.firstName || 'Unknown'
+              };
+            });
+          }
+        });
+        
+        renderMessagesTable();
+      }, (error) => {
+        showToast(`Error loading user messages: ${error.message}`, 'danger');
+      });
+    }
+
+    // Render messages table
+    function renderMessagesTable() {
+      messagesTableBody.innerHTML = '';
+      
+      // Convert to array and sort by timestamp (newest first)
+      const messagesArray = Object.values(allMessages);
+      messagesArray.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      messagesArray.forEach(message => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${message.userId.substring(0, 6)}...</td>
+          <td>${message.username}</td>
+          <td>${message.message}</td>
+          <td>${new Date(message.timestamp).toLocaleString()}</td>
+          <td>
+            <button class="btn btn-sm btn-primary action-btn" 
+                    onclick="openReplyModal('${message.userId}')">
+              <i class="fas fa-reply"></i> Reply
+            </button>
+          </td>
+        `;
+        messagesTableBody.appendChild(row);
+      });
+    }
+
+    // Open reply modal
+    function openReplyModal(userId) {
+      currentReplyUserId = userId;
+      document.getElementById('reply-user-id').value = userId;
+      document.getElementById('reply-message').value = '';
+      
+      const modal = new bootstrap.Modal(document.getElementById('replyMessageModal'));
+      modal.show();
+    }
+
+    // Send reply to user
+    function sendReply() {
+      if (!currentReplyUserId) return;
+      
+      const replyMessage = document.getElementById('reply-message').value.trim();
+      if (!replyMessage) {
+        showToast('Please enter a reply message.', 'warning');
+        return;
+      }
+      
+      // Create a new message in the user's inbox
+      const newMessageRef = database.ref('users/' + currentReplyUserId + '/inbox').push();
+      newMessageRef.set({
+        message: replyMessage,
+        timestamp: new Date().toISOString(),
+        fromAdmin: true
+      }).then(() => {
+        showToast('Reply sent successfully!', 'success');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('replyMessageModal'));
+        modal.hide();
+      }).catch((error) => {
+        showToast(`Error sending reply: ${error.message}`, 'danger');
+      });
+    }
+
     // Show toast notification
     function showToast(message, type = 'info') {
       toastBody.textContent = message;
@@ -937,6 +1223,8 @@
     window.openEditStatusModal = openEditStatusModal;
     window.updateWithdrawStatusFromModal = updateWithdrawStatusFromModal;
     window.filterUsers = filterUsers;
+    window.openReplyModal = openReplyModal;
+    window.sendReply = sendReply;
   </script>
 </body>
 </html>
