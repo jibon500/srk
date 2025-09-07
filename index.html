@@ -1,4 +1,3 @@
-
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -114,7 +113,6 @@
     </style>
 </head>
 <body>
-
 <!-- Navbar -->
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
     <div class="container-fluid">
@@ -138,7 +136,6 @@
         </div>
     </div>
 </nav>
-
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar -->
@@ -178,13 +175,11 @@
                 </ul>
             </div>
         </nav>
-
         <!-- Main Content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4" role="main">
             <div id="loading-spinner" class="spinner-border text-primary loading-spinner" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-
             <!-- Login Section -->
             <div id="login-section" class="section active">
                 <div class="d-flex justify-content-center align-items-center" style="height: 80vh;">
@@ -205,7 +200,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Dashboard Section -->
             <div id="dashboard-section" class="section">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -286,7 +280,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- App Configuration Section -->
             <div id="config-section" class="section">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -338,7 +331,6 @@
                     </div>
                 </form>
             </div>
-
             <!-- Users Section -->
             <div id="users-section" class="section">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -365,7 +357,6 @@
                     </table>
                 </div>
             </div>
-
             <!-- Withdrawals Section -->
             <div id="withdrawals-section" class="section">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -390,7 +381,6 @@
                     </table>
                 </div>
             </div>
-
             <!-- User Messages Section -->
             <div id="messages-section" class="section">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -412,7 +402,6 @@
                     </table>
                 </div>
             </div>
-
             <!-- Important Notices Section -->
             <div id="notices-section" class="section">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -438,7 +427,6 @@
         </main>
     </div>
 </div>
-
 <!-- Notice Modal -->
 <div class="modal fade" id="noticeModal" tabindex="-1" aria-labelledby="noticeModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -467,7 +455,6 @@
         </div>
     </div>
 </div>
-
 <!-- User Detail Modal -->
 <div class="modal fade" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -487,7 +474,6 @@
         </div>
     </div>
 </div>
-
 <!-- Message Reply Modal -->
 <div class="modal fade" id="messageReplyModal" tabindex="-1" aria-labelledby="messageReplyModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -509,11 +495,12 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <!-- Clear Messages Button -->
+                <button type="button" class="btn btn-danger" onclick="clearUserMessages()">Clear Messages</button>
             </div>
         </div>
     </div>
 </div>
-
 <!-- Toast Container -->
 <div class="toast-container position-fixed top-0 end-0 p-3">
     <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
@@ -526,10 +513,8 @@
         </div>
     </div>
 </div>
-
 <!-- Bootstrap Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
     // --- Firebase Configuration (SAME AS USER APP) ---
     const firebaseConfig = {
@@ -542,12 +527,10 @@
       appId: "1:25930019210:web:6441562811d3e7e9631873",
       measurementId: "G-P9HX6XXT1Q"
     };
-
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const database = firebase.database();
-
     // --- State Variables ---
     let appConfig = {};
     let usersData = {};
@@ -556,12 +539,10 @@
     let messagesData = {}; // To store messages for the messages section
     let currentReplyUserId = null; // To track which user we are replying to in the modal
     let replyMessagesListener = null; // Listener for real-time updates in the reply modal
-
     // --- DOM Elements ---
     const loadingSpinner = document.getElementById('loading-spinner');
     const toastEl = document.getElementById('liveToast');
     const toast = new bootstrap.Toast(toastEl);
-
     // --- Utility Functions ---
     function showToast(title, message, isError = false) {
         document.getElementById('toast-title').textContent = title;
@@ -570,7 +551,6 @@
         toastEl.classList.toggle('text-white', isError);
         toast.show();
     }
-
     function showSection(sectionId) {
         // Hide all sections
         document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
@@ -578,7 +558,6 @@
         if (sectionId) {
             document.getElementById(sectionId).classList.add('active');
         }
-
         // Specific actions for sections
         if (sectionId === 'config-section') {
             loadAppConfigForEdit();
@@ -594,7 +573,6 @@
              updateDashboardStats();
         }
     }
-
     function showLoading(show = true) {
         if (show) {
             loadingSpinner.style.display = 'block';
@@ -602,20 +580,17 @@
             loadingSpinner.style.display = 'none';
         }
     }
-
     // --- Authentication ---
     function login() {
         const email = document.getElementById('admin-email').value;
         const password = document.getElementById('admin-password').value;
         const errorDiv = document.getElementById('login-error');
         errorDiv.style.display = 'none';
-
         if (!email || !password) {
             errorDiv.textContent = 'Please enter email and password.';
             errorDiv.style.display = 'block';
             return;
         }
-
         auth.signInWithEmailAndPassword(email, password)
             .then((userCredential) => {
                 // Signed in
@@ -652,8 +627,6 @@
                 errorDiv.style.display = 'block';
             });
     }
-
-
     function logout() {
         auth.signOut().then(() => {
             console.log("Admin logged out");
@@ -669,7 +642,6 @@
             showToast('Error', 'Failed to logout.', true);
         });
     }
-
     // --- App Initialization ---
     async function initializeApp() {
         showLoading(true);
@@ -684,7 +656,6 @@
             showLoading(false);
         }
     }
-
     // --- Firebase Data Loading ---
     async function loadAppConfig() {
         try {
@@ -719,7 +690,6 @@
             showToast('Error', 'Failed to load app configuration.', true);
         }
     }
-
     async function loadUsers() {
         showLoading(true);
         try {
@@ -734,7 +704,6 @@
             showLoading(false);
         }
     }
-
     async function loadWithdrawals() {
         showLoading(true);
         try {
@@ -763,7 +732,6 @@
             showLoading(false);
         }
     }
-
     async function loadNotices() {
         showLoading(true);
         try {
@@ -777,18 +745,15 @@
             showLoading(false);
         }
     }
-
      async function loadUserMessages() {
         showLoading(true);
         try {
             // Load all users first to get their names/IDs
             await loadUsers(); // Ensure usersData is populated
-
             // This loads messages from all users
             const snapshot = await database.ref('users').once('value');
             const users = snapshot.val() || {};
             messagesData = {};
-
             for (const userId in users) {
                 if (users[userId].adminMessages) {
                     // Get the latest message for this user
@@ -814,21 +779,17 @@
             showLoading(false);
         }
     }
-
-
     // --- Dashboard Updates ---
     function updateDashboardStats() {
         // Total Users
         const totalUsers = Object.keys(usersData).length;
         document.getElementById('total-users-count').textContent = totalUsers;
-
         // Total Balance
         let totalBalance = 0;
         for (const userId in usersData) {
             totalBalance += usersData[userId].balance || 0;
         }
         document.getElementById('total-balance-sum').textContent = `$${totalBalance.toFixed(2)}`;
-
         // Pending Withdrawals
         let pendingCount = 0;
         for (const key in withdrawalsData) {
@@ -837,7 +798,6 @@
             }
         }
         document.getElementById('pending-withdrawals-count').textContent = pendingCount;
-
         // Global Config on Dashboard
         document.getElementById('dashboard-ad-system-status').textContent = appConfig.isAdSystemActive !== undefined ? (appConfig.isAdSystemActive ? 'Active' : 'Inactive') : 'N/A';
         document.getElementById('dashboard-daily-ad-limit').textContent = appConfig.dailyAdLimitPerUser !== undefined ? appConfig.dailyAdLimitPerUser : 'N/A';
@@ -845,7 +805,6 @@
         document.getElementById('dashboard-points-per-ad').textContent = appConfig.pointsPerAd !== undefined ? appConfig.pointsPerAd : 'N/A';
         document.getElementById('dashboard-coins-for-conversion').textContent = appConfig.coinsForConversion !== undefined ? appConfig.coinsForConversion : 'N/A';
         document.getElementById('dashboard-value-per-conversion').textContent = appConfig.valuePerConversion !== undefined ? `$${appConfig.valuePerConversion.toFixed(2)}` : 'N/A';
-
         // Recent User Activity (simplified)
         const recentActivityList = document.getElementById('recent-user-activity');
         recentActivityList.innerHTML = '';
@@ -864,7 +823,6 @@
                 recentActivityList.appendChild(li);
             });
         }
-
         // Recent Withdrawal Requests
         const recentWithdrawalsList = document.getElementById('recent-withdrawal-requests');
         recentWithdrawalsList.innerHTML = '';
@@ -885,7 +843,6 @@
             });
         }
     }
-
     // --- App Configuration Management ---
     function loadAppConfigForEdit() {
         document.getElementById('pointsPerAd').value = appConfig.pointsPerAd || '';
@@ -898,7 +855,6 @@
         document.getElementById('resetTimerHours').value = appConfig.resetTimerHours || '12'; // Default to 12 if not set
         document.getElementById('isAdSystemActive').value = appConfig.isAdSystemActive !== undefined ? appConfig.isAdSystemActive.toString() : 'true';
     }
-
     async function saveAppConfig() {
         const formData = new FormData(document.getElementById('app-config-form'));
         const newConfig = {};
@@ -911,7 +867,6 @@
                 newConfig[key] = parseInt(value);
             }
         }
-
         try {
             await database.ref('appConfig').update(newConfig);
             // Update local state with the new config, ensuring resetTimerHours is included
@@ -923,23 +878,19 @@
             showToast('Error', 'Failed to save app configuration.', true);
         }
     }
-
     // --- Users Management ---
     function renderUsersTable(filter = '') {
         const tableBody = document.getElementById('users-table-body');
         tableBody.innerHTML = '';
-
         const filteredUsers = Object.keys(usersData).filter(userId =>
             userId.toLowerCase().includes(filter.toLowerCase()) ||
             (usersData[userId].firstName && usersData[userId].firstName.toLowerCase().includes(filter.toLowerCase())) ||
             (usersData[userId].username && usersData[userId].username.toLowerCase().includes(filter.toLowerCase()))
         );
-
         if (filteredUsers.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No users found.</td></tr>';
             return;
         }
-
         filteredUsers.forEach(userId => {
             const user = usersData[userId];
             const row = document.createElement('tr');
@@ -960,11 +911,9 @@
             tableBody.appendChild(row);
         });
     }
-
     document.getElementById('user-search').addEventListener('input', function(e) {
         renderUsersTable(e.target.value);
     });
-
     async function toggleUserBlock(userId, isCurrentlyBlocked) {
         const newBlockStatus = !isCurrentlyBlocked;
         try {
@@ -978,10 +927,9 @@
             loadUsers();
         } catch (error) {
             console.error("Failed to toggle user block status:", error);
-            showToast('Error', `Failed to ${newBlockStatus ? 'block' : 'unblock'} user.`, true);
+            showToast('Error', `Failed to ${newBlockStatus ? 'block' : 'unblocked'} user.`, true);
         }
     }
-
     function viewUserDetails(userId) {
         const user = usersData[userId];
         if (!user) {
@@ -1020,7 +968,6 @@
         const userDetailModal = new bootstrap.Modal(document.getElementById('userDetailModal'));
         userDetailModal.show();
     }
-
     async function updateUserAdStatus(userId) {
         const newStatus = document.getElementById('ad-status-select').value;
         try {
@@ -1036,21 +983,18 @@
             showToast('Error', 'Failed to update user ad status.', true);
         }
     }
-
     function promptEditPoints(userId, currentPoints) {
         const newPoints = prompt("Enter new points:", currentPoints);
         if (newPoints !== null && !isNaN(newPoints)) {
             updateUserData(userId, 'points', parseInt(newPoints));
         }
     }
-
     function promptEditBalance(userId, currentBalance) {
         const newBalance = prompt("Enter new balance ($):", currentBalance);
         if (newBalance !== null && !isNaN(newBalance)) {
             updateUserData(userId, 'balance', parseFloat(newBalance));
         }
     }
-
     async function updateUserData(userId, field, value) {
         try {
             await database.ref(`users/${userId}/${field}`).set(value);
@@ -1069,19 +1013,15 @@
             showToast('Error', `Failed to update ${field}.`, true);
         }
     }
-
     // --- Withdrawals Management ---
     function renderWithdrawalsTable() {
         const tableBody = document.getElementById('withdrawals-table-body');
         tableBody.innerHTML = '';
-
         const sortedWithdrawals = Object.values(withdrawalsData).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
         if (sortedWithdrawals.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No withdrawal requests found.</td></tr>';
             return;
         }
-
         sortedWithdrawals.forEach(request => {
             // Use the composite key to identify the request
             const compositeKey = `${request.userId}/${request.requestId}`;
@@ -1106,13 +1046,11 @@
             tableBody.appendChild(row);
         });
     }
-
     async function updateWithdrawalStatus(compositeKey) {
         // compositeKey is "userId/requestId"
         const [userId, requestId] = compositeKey.split('/');
         const selectElement = document.querySelector(`.status-select[data-composite-key="${compositeKey}"]`);
         const newStatus = selectElement.value;
-
         try {
             await database.ref(`users/${userId}/withdrawHistory/${requestId}/status`).set(newStatus);
             // Update local state
@@ -1127,27 +1065,22 @@
             showToast('Error', 'Failed to update withdrawal status.', true);
         }
     }
-
     // --- User Messages Management ---
     function renderMessagesTable() {
         const tableBody = document.getElementById('messages-table-body');
         tableBody.innerHTML = '';
-
         const sortedMessages = Object.values(messagesData).sort((a, b) =>
             new Date(b.latestMessage.timestamp) - new Date(a.latestMessage.timestamp)
         );
-
         if (sortedMessages.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No user messages found.</td></tr>';
             return;
         }
-
         sortedMessages.forEach(msgData => {
             const userId = msgData.userId;
             const latestMsg = msgData.latestMessage;
             const user = usersData[userId] || {};
             const userName = user.firstName || user.username || 'Unknown User';
-
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${userId} (${userName})</td>
@@ -1160,7 +1093,6 @@
             tableBody.appendChild(row);
         });
     }
-
     function openMessageReplyModal(userId) {
         currentReplyUserId = userId;
         const user = usersData[userId] || {};
@@ -1168,10 +1100,8 @@
         document.getElementById('messageReplyModalLabel').textContent = `Reply to ${userName} (${userId})`;
         document.getElementById('reply-user-id').value = userId;
         document.getElementById('reply-message-input').value = '';
-
         const messageHistoryDiv = document.getElementById('reply-message-history');
         messageHistoryDiv.innerHTML = '<p class="text-center text-muted">Loading messages...</p>';
-
         // Close any existing listener
         if (replyMessagesListener) {
              try {
@@ -1185,20 +1115,15 @@
              }
              replyMessagesListener = null;
         }
-
         // Load message history
         loadReplyMessageHistory(userId);
-
         // Setup real-time listener for new messages
         setupReplyMessagesListener(userId);
-
         const messageReplyModal = new bootstrap.Modal(document.getElementById('messageReplyModal'));
         messageReplyModal.show();
-
         // Store the user ID for the currently listened to user
         window.lastListenedUserId = userId;
     }
-
     async function loadReplyMessageHistory(userId) {
         const messageHistoryDiv = document.getElementById('reply-message-history');
         try {
@@ -1210,7 +1135,6 @@
             messageHistoryDiv.innerHTML = '<p class="text-center text-danger">Failed to load messages.</p>';
         }
     }
-
     function renderReplyMessageHistory(messagesData) {
         const historyDiv = document.getElementById('reply-message-history');
         if (!messagesData) {
@@ -1220,16 +1144,13 @@
         const messages = Object.values(messagesData);
         // Sort messages by timestamp (oldest first for correct display order)
         messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
         // --- Update: Create message elements and append them correctly ---
         historyDiv.innerHTML = ''; // Clear previous content
         messages.forEach(msg => {
             const isUser = msg.sender === 'user'; // Check sender
             const bubbleClass = isUser ? 'received-message' : 'sent-message'; // Apply correct class
-
             const messageDiv = document.createElement('div');
             messageDiv.className = `message-bubble ${bubbleClass}`;
-
             messageDiv.innerHTML = `
                 ${msg.text}
                 <br><small>${new Date(msg.timestamp).toLocaleTimeString()}</small>
@@ -1240,19 +1161,15 @@
         historyDiv.scrollTop = historyDiv.scrollHeight;
         // --- End Update ---
     }
-
     function setupReplyMessagesListener(userId) {
         const userRef = database.ref(`users/${userId}/adminMessages`);
-
         // Define the callback function so we can reference it for .off()
         const messagesCallback = (snapshot) => {
             const messages = snapshot.val();
             renderReplyMessageHistory(messages);
         };
-
         // Store the callback for later removal
         window.lastReplyMessagesListener = messagesCallback;
-
         // Set up new listener
         replyMessagesListener = userRef.on('value', messagesCallback, (error) => {
             console.error("Error listening to reply messages:", error);
@@ -1260,18 +1177,15 @@
             messageHistoryDiv.innerHTML = '<p class="text-center text-danger">Error loading messages.</p>';
         });
     }
-
     // --- Fix: Corrected sendReplyMessage function ---
     async function sendReplyMessage() {
         const userId = document.getElementById('reply-user-id').value;
         const input = document.getElementById('reply-message-input');
         const messageText = input.value.trim();
-
         if (!messageText || !userId) {
             showToast('Error', 'Message text or user ID is missing.', true);
             return;
         }
-
         // --- Fix: Prepare message data correctly ---
         const messageData = {
             sender: 'admin', // <<--- IMPORTANT: Mark message as from admin
@@ -1279,7 +1193,6 @@
             timestamp: new Date().toISOString()
         };
         // --- End Fix ---
-
         try {
             // --- Fix: Push message to the correct Firebase path for the specific user ---
             await database.ref(`users/${userId}/adminMessages`).push(messageData);
@@ -1292,8 +1205,39 @@
             showToast('Error', 'Failed to send reply message. Please try again.', true);
         }
     }
-    // --- End Fix ---
+    // --- New Function: Clear User Messages ---
+    async function clearUserMessages() {
+        const userId = document.getElementById('reply-user-id').value;
+        if (!userId) {
+            showToast('Error', 'User ID is missing.', true);
+            return;
+        }
 
+        if (!confirm(`Are you sure you want to delete ALL messages for user ${userId}? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            // Remove all messages under the user's adminMessages node
+            await database.ref(`users/${userId}/adminMessages`).remove();
+            console.log(`Messages cleared for user: ${userId}`);
+            showToast('Success', 'Messages cleared successfully.');
+
+            // Clear the message history display in the modal
+            const messageHistoryDiv = document.getElementById('reply-message-history');
+            messageHistoryDiv.innerHTML = '<p class="text-center text-muted">No messages yet. Start a conversation!</p>';
+            
+            // Reload the messages section table to reflect the change
+            loadUserMessages();
+            
+        } catch (error) {
+            console.error("Error clearing messages:", error);
+            showToast('Error', 'Failed to clear messages. Please try again.', true);
+        }
+    }
+    // --- End New Function ---
+
+    // --- End Fix ---
     // Attach sendReplyMessage to the button click and Enter key
     document.getElementById('send-reply-message').addEventListener('click', sendReplyMessage);
     document.getElementById('reply-message-input').addEventListener('keypress', function(e) {
@@ -1301,20 +1245,15 @@
             sendReplyMessage();
         }
     });
-
-
     // --- Notices Management ---
     function renderNoticesTable() {
         const tableBody = document.getElementById('notices-table-body');
         tableBody.innerHTML = '';
-
         const sortedNotices = Object.entries(noticesData).sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp));
-
         if (sortedNotices.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No notices found.</td></tr>';
             return;
         }
-
         sortedNotices.forEach(([key, notice]) => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -1329,24 +1268,20 @@
             tableBody.appendChild(row);
         });
     }
-
     function openNoticeModal(mode, key = '', title = '', message = '') {
         document.getElementById('notice-key').value = key;
         document.getElementById('notice-title').value = title;
         document.getElementById('notice-message').value = message;
         document.getElementById('noticeModalLabel').textContent = mode === 'edit' ? 'Edit Notice' : 'Add New Notice';
     }
-
     async function saveNotice() {
         const key = document.getElementById('notice-key').value;
         const title = document.getElementById('notice-title').value.trim();
         const message = document.getElementById('notice-message').value.trim();
-
         if (!title || !message) {
             showToast('Error', 'Title and message are required.', true);
             return;
         }
-
         try {
             if (key) {
                 // Edit existing notice
@@ -1375,7 +1310,6 @@
             showToast('Error', 'Failed to save notice.', true);
         }
     }
-
     async function deleteNotice(key) {
         if (!confirm("Are you sure you want to delete this notice?")) {
             return;
@@ -1390,7 +1324,6 @@
             showToast('Error', 'Failed to delete notice.', true);
         }
     }
-
     // --- Cleanup listener on modal close and window unload ---
     document.getElementById('messageReplyModal').addEventListener('hidden.bs.modal', function () {
         // Remove the specific listener when the modal is closed
@@ -1407,7 +1340,6 @@
         }
         currentReplyUserId = null; // Clear current user ID
     });
-
     window.addEventListener('beforeunload', () => {
        // General cleanup for other listeners (existing code)
         // ... (code for userBlockedListener, withdrawHistoryListener etc. - omitted for brevity)
@@ -1425,7 +1357,7 @@
         }
         currentReplyUserId = null;
     });
-
 </script>
 </body>
 </html>
+```
