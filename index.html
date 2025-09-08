@@ -1360,33 +1360,41 @@
             return;
         }
         sortedNotices.forEach(([key, notice]) => {
-            // Escape single quotes in title and message for safe use in onclick attribute
-            const escapedTitle = (notice.title || '').replace(/'/g, "\\'");
-            const escapedMessage = (notice.message || '').replace(/'/g, "\\'");
+            // এখন আমরা শুধুমাত্র key পাঠাবো, আগের মতো title এবং message পাঠানো হবে না
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${notice.title}</td>
                 <td>${notice.message.substring(0, 50)}${notice.message.length > 50 ? '...' : ''}</td>
                 <td>${new Date(notice.timestamp).toLocaleString()}</td>
                 <td>
-                    <button class="btn btn-sm btn-outline-primary action-btn" onclick="openNoticeModal('edit', '${key}', '${escapedTitle}', '${escapedMessage}')"><i class="fas fa-edit"></i> Edit</button>
+                    <!-- শুধুমাত্র 'edit' mode এবং key পাঠানো হচ্ছে -->
+                    <button class="btn btn-sm btn-outline-primary action-btn" onclick="openNoticeModal('edit', '${key}')"><i class="fas fa-edit"></i> Edit</button>
                     <button class="btn btn-sm btn-outline-danger action-btn" onclick="deleteNotice('${key}')"><i class="fas fa-trash"></i> Delete</button>
                 </td>
             `;
             tableBody.appendChild(row);
         });
     }
-    function openNoticeModal(mode, key = '', title = '', message = '') {
+    // এই ফাংশনটি পরিবর্তন করা হয়েছে: mode এবং key নেবে, title এবং message আর নেবে না
+    function openNoticeModal(mode, key = '') {
         // Ensure the modal is shown using Bootstrap's JS API
         const noticeModal = new bootstrap.Modal(document.getElementById('noticeModal'));
         noticeModal.show();
-
+        
         // Populate fields after a short delay to ensure the modal DOM is ready
         setTimeout(() => {
             document.getElementById('notice-key').value = key;
-            document.getElementById('notice-title').value = title;
-            document.getElementById('notice-message').value = message;
             document.getElementById('noticeModalLabel').textContent = mode === 'edit' ? 'Edit Notice' : 'Add New Notice';
+            
+            if (mode === 'edit' && key && noticesData[key]) {
+                // যদি edit mode হয় এবং key থাকে, তাহলে noticesData থেকে title এবং message নিয়ে ফরম পূরণ করুন
+                document.getElementById('notice-title').value = noticesData[key].title || '';
+                document.getElementById('notice-message').value = noticesData[key].message || '';
+            } else {
+                // যদি new mode হয় বা key না থাকে, তাহলে ফরম ফিল্ডগুলো খালি করুন
+                document.getElementById('notice-title').value = '';
+                document.getElementById('notice-message').value = '';
+            }
         }, 100); // 100ms delay should be sufficient
     }
     async function saveNotice() {
