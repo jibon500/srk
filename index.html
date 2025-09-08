@@ -1361,8 +1361,8 @@
         }
         sortedNotices.forEach(([key, notice]) => {
             // Escape single quotes in title and message for safe use in onclick attribute
-            const escapedTitle = notice.title.replace(/'/g, "\\'");
-            const escapedMessage = notice.message.replace(/'/g, "\\'");
+            const escapedTitle = (notice.title || '').replace(/'/g, "\\'");
+            const escapedMessage = (notice.message || '').replace(/'/g, "\\'");
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${notice.title}</td>
@@ -1377,14 +1377,17 @@
         });
     }
     function openNoticeModal(mode, key = '', title = '', message = '') {
-        document.getElementById('notice-key').value = key;
-        document.getElementById('notice-title').value = title;
-        document.getElementById('notice-message').value = message;
-        document.getElementById('noticeModalLabel').textContent = mode === 'edit' ? 'Edit Notice' : 'Add New Notice';
-
-         // Ensure the modal is shown using Bootstrap's JS API
+        // Ensure the modal is shown using Bootstrap's JS API
         const noticeModal = new bootstrap.Modal(document.getElementById('noticeModal'));
         noticeModal.show();
+
+        // Populate fields after a short delay to ensure the modal DOM is ready
+        setTimeout(() => {
+            document.getElementById('notice-key').value = key;
+            document.getElementById('notice-title').value = title;
+            document.getElementById('notice-message').value = message;
+            document.getElementById('noticeModalLabel').textContent = mode === 'edit' ? 'Edit Notice' : 'Add New Notice';
+        }, 100); // 100ms delay should be sufficient
     }
     async function saveNotice() {
         const key = document.getElementById('notice-key').value;
@@ -1414,9 +1417,11 @@
             }
             // Reload notices
             loadNotices();
-            // Close modal
+            // Close modal using Bootstrap's API
             const modal = bootstrap.Modal.getInstance(document.getElementById('noticeModal'));
-            modal.hide();
+            if (modal) {
+                 modal.hide();
+            }
         } catch (error) {
             console.error("Failed to save notice:", error);
             showToast('Error', 'Failed to save notice.', true);
