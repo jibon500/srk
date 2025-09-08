@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,7 +12,6 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <!-- Removed Firebase Auth as it's not needed for UID-only login -->
     <style>
         body {
             padding-top: 60px; /* Space for fixed navbar */
@@ -109,6 +109,14 @@
             background-color: #e9ecef; /* Bootstrap light color */
             color: #212529; /* Bootstrap dark color */
             margin-right: auto; /* Align left for user */
+        }
+        /* --- End Update --- */
+        /* --- Update: Larger Notice Modal --- */
+        .modal-xl {
+            max-width: 800px; /* Adjust width as needed */
+        }
+        .notice-message-large {
+            min-height: 150px; /* Make the textarea taller */
         }
         /* --- End Update --- */
         /* Disable links in navbar and sidebar when not logged in */
@@ -465,8 +473,9 @@
     </div>
 </div>
 <!-- Notice Modal -->
+<!-- Updated Modal: Added modal-xl class for larger size -->
 <div class="modal fade" id="noticeModal" tabindex="-1" aria-labelledby="noticeModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-xl"> <!-- Changed from modal-dialog to modal-xl -->
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="noticeModalLabel">Add/Edit Notice</h5>
@@ -481,7 +490,8 @@
                     </div>
                     <div class="mb-3">
                         <label for="notice-message" class="form-label">Message</label>
-                        <textarea class="form-control" id="notice-message" rows="3" required></textarea>
+                        <!-- Updated Textarea: Added notice-message-large class for larger size -->
+                        <textarea class="form-control notice-message-large" id="notice-message" rows="6" required></textarea>
                     </div>
                 </form>
             </div>
@@ -621,22 +631,18 @@
         const uid = document.getElementById('admin-uid').value.trim();
         const errorDiv = document.getElementById('login-error');
         errorDiv.style.display = 'none';
-
         // Hardcoded UID for login
         const requiredUid = 'YC0HCH4qQaUuVQsrAmfk5WiBfQ43';
-
         if (!uid) {
             errorDiv.textContent = 'Please enter Admin UID.';
             errorDiv.style.display = 'block';
             return;
         }
-
         if (uid !== requiredUid) {
              errorDiv.textContent = 'Invalid Admin UID.';
              errorDiv.style.display = 'block';
              return;
         }
-
         // If UID is correct
         console.log("Admin logged in with UID:", uid);
         document.getElementById('logged-in-email').textContent = uid;
@@ -671,8 +677,6 @@
         showSection('dashboard-section');
         initializeApp(); // Load initial data
     }
-
-
     function logout() {
         // Reset UI state
         console.log("Admin logged out");
@@ -922,18 +926,14 @@
         document.getElementById('resetTimerHours').value = appConfig.resetTimerHours || '12'; // Default to 12 if not set
         document.getElementById('isAdSystemActive').value = appConfig.isAdSystemActive !== undefined ? appConfig.isAdSystemActive.toString() : 'true';
     }
-
     // --- Updated saveAppConfig function ---
     async function saveAppConfig() {
         // Get the form element
         const form = document.getElementById('app-config-form');
-        
         // Create a new FormData object from the form
         const formData = new FormData(form);
-        
         // Prepare the config object to be saved
         const newConfig = {};
-
         // Iterate through the form data entries
         for (const [key, value] of formData.entries()) {
             // Convert values based on their expected types
@@ -947,38 +947,30 @@
                 // Convert to integer for other numeric values
                 newConfig[key] = parseInt(value);
             }
-            
             // Basic validation: Check if conversion was successful
             if (isNaN(newConfig[key])) {
                  showToast('Error', `Invalid value for ${key}. Please check the input.`, true);
                  return; // Stop execution if validation fails
             }
         }
-
         try {
             // Update the configuration in Firebase
             await database.ref('appConfig').update(newConfig);
-            
             // Update the local appConfig state with the new values
             // Ensure resetTimerHours is included if it was in the form data
             appConfig = { ...appConfig, ...newConfig };
-            
             // Show success message
             showToast('Success', 'App configuration saved successfully.');
-            
             // Update the dashboard stats to reflect the new configuration
             updateDashboardStats();
-            
         } catch (error) {
             // Log the error for debugging
             console.error("Failed to save app config:", error);
-            
             // Show error message to the user
             showToast('Error', 'Failed to save app configuration. Please try again.', true);
         }
     }
     // --- End of Updated saveAppConfig function ---
-
     // --- Users Management ---
     function renderUsersTable(filter = '') {
         const tableBody = document.getElementById('users-table-body');
@@ -1195,7 +1187,6 @@
             tableBody.appendChild(row);
         });
     }
-
      // নতুন ফাংশন: Messages table থেকে মেসেজ ক্লিয়ার করতে
     async function clearUserMessagesFromTable(userId) {
         if (!confirm(`Are you sure you want to delete ALL messages for user ${userId}? This action cannot be undone.`)) {
@@ -1212,8 +1203,6 @@
             showToast('Error', 'Failed to clear messages. Please try again.', true);
         }
     }
-
-
     function openMessageReplyModal(userId) {
         currentReplyUserId = userId;
         const user = usersData[userId] || {};
@@ -1326,7 +1315,6 @@
             showToast('Error', 'Failed to send reply message. Please try again.', true);
         }
     }
-
      // --- New Function: Clear User Messages from Modal ---
     async function clearUserMessages() {
         const userId = document.getElementById('reply-user-id').value;
@@ -1334,31 +1322,25 @@
             showToast('Error', 'User ID is missing.', true);
             return;
         }
-
         if (!confirm(`Are you sure you want to delete ALL messages for user ${userId}? This action cannot be undone.`)) {
             return;
         }
-
         try {
             // Remove all messages under the user's adminMessages node
             await database.ref(`users/${userId}/adminMessages`).remove();
             console.log(`Messages cleared for user: ${userId}`);
             showToast('Success', 'Messages cleared successfully.');
-
             // Clear the message history display in the modal
             const messageHistoryDiv = document.getElementById('reply-message-history');
             messageHistoryDiv.innerHTML = '<p class="text-center text-muted">No messages yet. Start a conversation!</p>';
-
             // Reload the messages section table to reflect the change
             loadUserMessages();
-
         } catch (error) {
             console.error("Error clearing messages:", error);
             showToast('Error', 'Failed to clear messages. Please try again.', true);
         }
     }
     // --- End New Function ---
-
     // --- End Fix ---
     // Attach sendReplyMessage to the button click and Enter key
     document.getElementById('send-reply-message').addEventListener('click', sendReplyMessage);
@@ -1482,3 +1464,4 @@
 </script>
 </body>
 </html>
+```
