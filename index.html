@@ -12,6 +12,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <!-- Removed Firebase Auth as it's not needed for UID-only login -->
     <style>
         body {
             padding-top: 60px; /* Space for fixed navbar */
@@ -1359,13 +1360,16 @@
             return;
         }
         sortedNotices.forEach(([key, notice]) => {
+            // Escape single quotes in title and message for safe use in onclick attribute
+            const escapedTitle = notice.title.replace(/'/g, "\\'");
+            const escapedMessage = notice.message.replace(/'/g, "\\'");
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${notice.title}</td>
                 <td>${notice.message.substring(0, 50)}${notice.message.length > 50 ? '...' : ''}</td>
                 <td>${new Date(notice.timestamp).toLocaleString()}</td>
                 <td>
-                    <button class="btn btn-sm btn-outline-primary action-btn" onclick="openNoticeModal('edit', '${key}', '${notice.title}', '${notice.message.replace(/'/g, "\\'")}')"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn btn-sm btn-outline-primary action-btn" onclick="openNoticeModal('edit', '${key}', '${escapedTitle}', '${escapedMessage}')"><i class="fas fa-edit"></i> Edit</button>
                     <button class="btn btn-sm btn-outline-danger action-btn" onclick="deleteNotice('${key}')"><i class="fas fa-trash"></i> Delete</button>
                 </td>
             `;
@@ -1377,6 +1381,10 @@
         document.getElementById('notice-title').value = title;
         document.getElementById('notice-message').value = message;
         document.getElementById('noticeModalLabel').textContent = mode === 'edit' ? 'Edit Notice' : 'Add New Notice';
+
+         // Ensure the modal is shown using Bootstrap's JS API
+        const noticeModal = new bootstrap.Modal(document.getElementById('noticeModal'));
+        noticeModal.show();
     }
     async function saveNotice() {
         const key = document.getElementById('notice-key').value;
